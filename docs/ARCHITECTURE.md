@@ -11,14 +11,14 @@ The Transformer is not yet trained into a capable conversational model. The webs
 
 The original Dying Ember source document is preserved verbatim at `docs/FAI_SOURCE_DYING_EMBER.txt`. Do not edit or paraphrase that file when changing the code.
 
-The local conversation runtime is organized around the source-defined systems:
+The source-defined systems are preserved as specifications in `FAI_SYSTEMS`:
 
 - `PERSONALITY-AI`
 - `FEELINGS-AI`
 - `RULE-AI`
 - `TRAITS-AI`
 
-Together they form `FAI-AI`, as the source states. The source also states that the archive may be incomplete, joking, false, exaggerated, or contradictory, and that nothing is absolute without evidence. The runtime must not fabricate missing subject messages, memories, traits, or feelings. The source document is a mission specification; the underlying subject conversation archive must still be ingested as evidence before a reliable reconstruction can be made.
+Together they form `FAI-AI`, as the source states. The current website conversation prototype does **not** claim to implement or reconstruct those four subject systems. Its separate chat-tone and user-conversation cue helpers are not FAI subsystems. The source also states that the archive may be incomplete, joking, false, exaggerated, or contradictory, and that nothing is absolute without evidence. The runtime must not fabricate missing subject messages, memories, traits, or feelings. The source document is a mission specification; the underlying subject conversation archive must still be ingested as evidence before a reliable reconstruction can be made.
 
 ## Offline website chat
 

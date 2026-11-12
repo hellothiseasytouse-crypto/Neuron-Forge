@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "bash scripts/build_web.sh",
+  "outputDirectory": "public",
+  "functions": {
+    "api/generate.py": {
+      "maxDuration": 60,
+      "includeFiles": "{src/neuronforge_engine/**,checkpoints/latest.pt}"
+    }
+  }
+}

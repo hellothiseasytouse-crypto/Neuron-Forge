@@ -2,124 +2,165 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0b0e14">
-  <meta name="description" content="Neuron Forge — an experimental language model trained from random initialization.">
-  <title>Neuron Forge — Smiling Cat Lab</title>
-  <style>
-    :root{color-scheme:dark;--bg:#0b0e14;--panel:#111722;--panel2:#151d2a;--line:#263244;--muted:#9aa8bd;--text:#edf2fb;--accent:#a8c5ff;--accent2:#7c9ee8;--green:#8ed9b3;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -15%,#1c2b48 0,transparent 48%),var(--bg);color:var(--text)}
-    .shell{min-height:100vh;display:flex;flex-direction:column;max-width:1160px;margin:auto;padding:28px 26px 18px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:7px 2px 24px;border-bottom:1px solid #ffffff12}
-    .brand{display:flex;align-items:center;gap:13px}.mark{width:42px;height:42px;border:1px solid #52688e;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#243b61,#111b2b);color:#c8d9ff;font-size:19px;font-weight:800;box-shadow:inset 0 1px #ffffff20}
-    h1{font-size:19px;letter-spacing:.02em;margin:0 0 3px}.tagline{font-size:12px;color:var(--muted)}
-    .top-status{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:12px;color:#c4cfdf;background:#111722aa}.dot{width:7px;height:7px;border-radius:50%;background:#d6aa63;box-shadow:0 0 10px #d6aa6380}.dot.ready{background:var(--green);box-shadow:0 0 10px #8ed9b380}
-    .intro{padding:34px 2px 22px;display:flex;justify-content:space-between;gap:24px;align-items:end}.eyebrow{color:var(--accent);font-size:11px;font-weight:700;letter-spacing:.17em;text-transform:uppercase}.intro h2{font-size:clamp(27px,4vw,42px);letter-spacing:-.04em;line-height:1.08;margin:12px 0 10px;font-weight:650}.intro p{max-width:620px;margin:0;color:var(--muted);font-size:14px;line-height:1.7}
-    .model-card{min-width:190px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#172234,#101620);padding:15px 17px}.model-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.13em;color:#8fa2bf}.model-card strong{display:block;font-size:20px;margin-top:5px}.model-card small{display:block;color:var(--muted);font-size:11px;margin-top:5px}
-    .workspace{display:grid;grid-template-columns:235px minmax(0,1fr);gap:16px;flex:1;min-height:480px}
-    aside,.chat{border:1px solid var(--line);background:#101620eF;border-radius:20px;overflow:hidden}.side-inner{padding:20px}.side-title{font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:#8798b2;font-weight:700;margin-bottom:14px}.metric{padding:13px 0;border-top:1px solid #ffffff10}.metric:first-of-type{border-top:0}.metric span{display:block;color:var(--muted);font-size:11px}.metric b{display:block;font-size:14px;font-weight:600;margin-top:5px}.notice{margin-top:18px;padding:13px;border-radius:12px;background:#192436;color:#b8c8e1;font-size:11px;line-height:1.6;border:1px solid #293c5b}
-    .chat{display:flex;flex-direction:column;min-height:480px}.chat-head{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 19px;border-bottom:1px solid #ffffff10}.chat-head strong{font-size:13px;font-weight:650}.clear{border:1px solid var(--line);background:transparent;color:#aab8cd;padding:7px 11px;border-radius:9px;font-size:11px;cursor:pointer}.clear:hover{background:#1a2535;color:#fff}
-    #messages{padding:21px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:14px;min-height:320px}.welcome{margin:auto;max-width:420px;text-align:center;padding:24px}.welcome-icon{margin:0 auto 15px;width:48px;height:48px;border-radius:16px;border:1px solid #455b7f;background:#1a2a43;display:grid;place-items:center;color:#c4d7ff;font-size:20px}.welcome h3{margin:0 0 8px;font-size:17px}.welcome p{margin:0;color:var(--muted);font-size:12px;line-height:1.7}
-    .message{max-width:min(83%,680px);padding:12px 15px;border-radius:15px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font-size:13px}.message.user{align-self:flex-end;background:#273c5e;color:#f0f5ff;border:1px solid #3d5680;border-bottom-right-radius:5px}.message.assistant{align-self:flex-start;background:#1a2331;border:1px solid #2a394f;border-bottom-left-radius:5px}.message.error{border-color:#714343;background:#2b1b20;color:#ffd1d1}.message .speaker{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#93a8c9;margin-bottom:5px}
-    form{padding:15px;border-top:1px solid #ffffff10;display:flex;gap:10px;align-items:end;background:#0d131d}.input-wrap{flex:1;min-width:0}textarea{width:100%;min-height:52px;max-height:150px;resize:vertical;padding:14px 15px;border:1px solid #34445d;border-radius:13px;background:#111a27;color:#f4f7ff;font:inherit;font-size:13px;outline:none}textarea:focus{border-color:#7897cf;box-shadow:0 0 0 3px #7897cf20}textarea::placeholder{color:#7f8ea5}.send{height:52px;border:0;border-radius:13px;padding:0 20px;background:var(--accent);color:#101827;font-weight:750;font-size:12px;cursor:pointer}.send:hover{background:#c1d5ff}.send:disabled{opacity:.48;cursor:wait}.hint{font-size:10px;color:#73839b;margin:7px 3px 0}
-    footer{display:flex;justify-content:space-between;gap:12px;padding:18px 3px 2px;color:#718098;font-size:11px}footer strong{font-weight:600;color:#a8b6cb}
-    @media(max-width:760px){.shell{padding:15px 12px}.intro{padding:25px 2px 18px;display:block}.model-card{margin-top:18px;max-width:260px}.workspace{grid-template-columns:1fr;min-height:0}aside{order:2}.side-inner{padding:15px}.side-title{margin-bottom:8px}.metric{display:inline-block;vertical-align:top;width:32%;padding:9px 8px 9px 0;border-top:0}.metric b{font-size:12px}.notice{margin-top:8px}.chat{min-height:62vh}.message{max-width:92%}footer{font-size:10px;flex-direction:column;align-items:center;text-align:center}.top-status{font-size:10px;padding:7px 9px}}
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c1118">
+  <meta name="description" content="Neuron Forge is an independent language project exploring the collected works of William Shakespeare.">
+  <title>Neuron Forge — Smiling Cat Labs</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/assets/neuron-forge.css">
+  <script src="/assets/neuron-forge.js" defer></script>
 </head>
 <body>
-<div class="shell">
-  <header>
-    <div class="brand"><div class="mark" aria-hidden="true">N</div><div><h1>Neuron Forge</h1><div class="tagline">An experimental AI built from scratch</div></div></div>
-    <div class="top-status"><span id="status-dot" class="dot"></span><span id="status-text">Connecting to model…</span></div>
-  </header>
-  <section class="intro">
-    <div><div class="eyebrow">Independent model research</div><h2>Build. Train. Generate.</h2><p>Talk to a small character-level neural network trained from random initialization for this website. The repository also contains a separate GPT Transformer training engine — no pretrained chatbot or hosted AI API is used.</p></div>
-    <div class="model-card"><div class="label">Active model</div><strong>Neuron Forge 0.2</strong><small id="model-meta">Checking model details…</small></div>
-  </section>
-  <section class="workspace">
-    <aside><div class="side-inner"><div class="side-title">Model information</div>
-      <div class="metric"><span>Architecture</span><b>Character RNN · web demo</b></div>
-      <div class="metric"><span>Weights</span><b>Random initialization</b></div>
-      <div class="metric"><span>Runtime</span><b>Cloud API</b></div>
-      <div class="notice">This hosted demo is a small character-level recurrent neural network trained from scratch on original example conversations. Its answers are limited and can be incoherent. The full GPT Transformer training engine is included separately in the repository.</div>
-    </div></aside>
-    <section class="chat">
-      <div class="chat-head"><strong>Chat with Neuron Forge</strong><button class="clear" id="clear" type="button">Clear chat</button></div>
-      <div id="messages" aria-live="polite"><div class="welcome" id="welcome"><div class="welcome-icon">✳</div><h3>Your model is ready to test</h3><p>Send a prompt below. This lightweight demo model was trained from scratch when the website was built.</p></div></div>
-      <form id="form"><div class="input-wrap"><textarea id="prompt" rows="1" maxlength="2000" placeholder="Message Neuron Forge…" required></textarea><div class="hint">Enter to send · Shift + Enter for a new line</div></div><button class="send" id="send" type="submit">Send ↗</button></form>
-    </section>
-  </section>
-  <footer><span>Experimental model · Generated output may be incoherent</span><span><strong>Created by Smiling Cat Lab</strong></span></footer>
-</div>
-<script>
-const form=document.getElementById('form');
-const input=document.getElementById('prompt');
-const send=document.getElementById('send');
-const messages=document.getElementById('messages');
-const welcome=document.getElementById('welcome');
-const statusText=document.getElementById('status-text');
-const statusDot=document.getElementById('status-dot');
-const modelMeta=document.getElementById('model-meta');
-function addMessage(text,kind){
-  if(welcome)welcome.remove();
-  const node=document.createElement('div');
-  node.className='message '+kind;
-  const label=document.createElement('span');
-  label.className='speaker';
-  label.textContent=kind==='user'?'You':'Neuron Forge';
-  const body=document.createElement('span');
-  body.textContent=text;
-  node.append(label,body);
-  messages.appendChild(node);
-  messages.scrollTop=messages.scrollHeight;
-  return body;
-}
-async function checkHealth(){
-  try{
-    const response=await fetch('/api/generate',{method:'GET',cache:'no-store'});
-    const data=await response.json();
-    if(!response.ok||!data.ok)throw new Error(data.error||'Model unavailable');
-    statusText.textContent='Model online';
-    statusDot.classList.add('ready');
-    modelMeta.textContent=data.parameters.toLocaleString()+' parameters · '+data.training_steps+' training steps';
-  }catch(error){
-    statusText.textContent='Model unavailable';
-    modelMeta.textContent='API or checkpoint not ready';
-  }
-}
-form.addEventListener('submit',async event=>{
-  event.preventDefault();
-  const prompt=input.value.trim();
-  if(!prompt||send.disabled)return;
-  addMessage(prompt,'user');
-  input.value='';
-  send.disabled=true;
-  const output=addMessage('Generating…','assistant');
-  try{
-    const response=await fetch('/api/generate',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,max_new_tokens:96,temperature:0.8,top_k:40,top_p:0.95})
-    });
-    const data=await response.json();
-    if(!response.ok)throw new Error(data.error||'Generation failed');
-    output.textContent=data.text||'(The model returned an empty response.)';
-  }catch(error){
-    output.textContent='Could not generate a response: '+error.message;
-    output.parentElement.classList.add('error');
-  }finally{
-    send.disabled=false;
-    input.focus();
-    messages.scrollTop=messages.scrollHeight;
-  }
-});
-input.addEventListener('keydown',event=>{
-  if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();form.requestSubmit();}
-});
-document.getElementById('clear').addEventListener('click',()=>{
-  messages.innerHTML='<div class="welcome" id="welcome"><div class="welcome-icon">✳</div><h3>Ready when you are</h3><p>Send a prompt to the Neuron Forge model.</p></div>';
-});
-checkHealth();
-</script>
+  <div class="app-shell" id="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand-row">
+        <a class="brand" href="/" aria-label="Neuron Forge home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 40 40" role="img">
+              <path d="M11 28V12l18 16V12" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="11" cy="11" r="3" fill="#d5f89b"/>
+              <circle cx="29" cy="29" r="3" fill="#d5f89b"/>
+              <circle cx="29" cy="11" r="2.6" fill="#8fcbd0"/>
+              <circle cx="11" cy="29" r="2.6" fill="#8fcbd0"/>
+            </svg>
+          </span>
+          <span class="brand-copy"><strong>Neuron Forge</strong><small>Smiling Cat Labs</small></span>
+        </a>
+        <button class="icon-button collapse-button" id="collapse-sidebar" type="button" aria-label="Collapse sidebar" title="Collapse sidebar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5 7 12l7 7M19 5v14"/></svg>
+        </button>
+      </div>
+
+      <button class="new-chat-button" id="new-chat" type="button">
+        <span class="plus">＋</span><span>New conversation</span><kbd>⌘ K</kbd>
+      </button>
+
+      <div class="sidebar-section-label">WORKSPACE</div>
+      <nav class="side-nav" aria-label="Workspace">
+        <button class="nav-item active" data-view="chat" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l1.6-3.2A7.5 7.5 0 1 1 20 11.5Z"/></svg>
+          <span>Chat</span>
+          <span class="nav-active-dot"></span>
+        </button>
+        <button class="nav-item" data-view="works" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5Zm0 0V19"/></svg>
+          <span>Shakespeare library</span>
+        </button>
+        <button class="nav-item" data-view="about" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>
+          <span>About Neuron Forge</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-section-label collection-label">COLLECTION</div>
+      <div class="sidebar-collection" id="sidebar-collection">
+        <div class="collection-skeleton"></div>
+        <div class="collection-skeleton short"></div>
+        <div class="collection-skeleton"></div>
+      </div>
+
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-status">
+        <span class="status-pip" id="status-pip"></span>
+        <span class="status-copy"><strong id="sidebar-status">Connecting</strong><small id="sidebar-status-detail">Preparing local library</small></span>
+        <button class="icon-button status-info" data-view="about" type="button" aria-label="Model details" title="Model details">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>
+        </button>
+      </div>
+      <div class="sidebar-foot">AN INDEPENDENT RESEARCH PROJECT</div>
+    </aside>
+
+    <main class="main-panel">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-button mobile-menu" id="open-sidebar" type="button" aria-label="Open navigation">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <div class="breadcrumb"><span>Neuron Forge</span><span class="crumb-slash">/</span><strong id="view-heading">Chat</strong></div>
+        </div>
+        <div class="topbar-right">
+          <span class="model-pill"><i></i><span id="top-status">Local corpus</span></span>
+          <button class="icon-button clear-button" id="clear-chat" type="button" aria-label="Clear conversation" title="Clear conversation">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-.8 13H6.8L6 7m4 4v5m4-5v5"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="view active" id="chat-view">
+        <div class="chat-layout">
+          <div class="intro-block">
+            <div class="intro-kicker"><span class="kicker-line"></span> THE SHAKESPEARE COLLECTION <span class="kicker-line"></span></div>
+            <h1>Words become <em>patterns.</em></h1>
+            <p class="intro-description">Explore the plays, poems, and sonnets in Neuron Forge's local Shakespeare collection. Ask about a character, theme, scene, or phrase and the engine will find passages from the texts stored in this project.</p>
+            <div class="description-credit">
+              <span class="credit-rule"></span>
+              <span>Created by - Smiling cat lab's</span>
+            </div>
+          </div>
+
+          <div class="conversation-panel">
+            <div class="conversation-heading">
+              <div class="conversation-title"><span class="conversation-symbol">✳</span><div><strong>Conversation</strong><small>Responses drawn from the local collection</small></div></div>
+              <span class="conversation-tag">SHAKESPEARE EDITION</span>
+            </div>
+
+            <div class="messages" id="messages" aria-live="polite">
+              <div class="welcome-state" id="welcome-state">
+                <div class="welcome-orbit"><span class="orbit-dot"></span><span class="orbit-core">N</span><span class="orbit-star">✦</span></div>
+                <h2>What shall we explore?</h2>
+                <p>Start with a work, a character, or an idea from the collection.</p>
+                <div class="prompt-grid">
+                  <button class="prompt-card" data-prompt="Find passages about ambition in Macbeth" type="button"><span class="prompt-icon violet">♜</span><span><strong>Ambition in Macbeth</strong><small>Power, choice, and consequence</small></span><span class="prompt-arrow">↗</span></button>
+                  <button class="prompt-card" data-prompt="Show me passages about love in Romeo and Juliet" type="button"><span class="prompt-icon rose">♡</span><span><strong>Love in Romeo and Juliet</strong><small>Famous scenes and lines</small></span><span class="prompt-arrow">↗</span></button>
+                  <button class="prompt-card" data-prompt="Find a sonnet about time and beauty" type="button"><span class="prompt-icon amber">❋</span><span><strong>Time and beauty</strong><small>Explore the sonnets</small></span><span class="prompt-arrow">↗</span></button>
+                  <button class="prompt-card" data-prompt="Find passages about magic in The Tempest" type="button"><span class="prompt-icon teal">✧</span><span><strong>Magic in The Tempest</strong><small>Islands, spirits, and wonder</small></span><span class="prompt-arrow">↗</span></button>
+                </div>
+              </div>
+            </div>
+
+            <form class="composer" id="composer">
+              <div class="composer-inner">
+                <textarea id="message-input" rows="1" maxlength="2000" placeholder="Ask about a play, character, theme, or line…" required></textarea>
+                <button class="send-button" id="send-button" type="submit" aria-label="Send message">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 14-7-4 14-3.5-5.5L5 12Z"/><path d="m11.5 13.5 4-4"/></svg>
+                </button>
+              </div>
+              <div class="composer-meta"><span>Enter to send <kbd>Shift + Enter</kbd> for a new line</span><span id="composer-count">0 / 2000</span></div>
+            </form>
+          </div>
+
+          <p class="quiet-note">The hosted interface searches the texts bundled with this project. It does not call an outside AI service.</p>
+        </div>
+      </section>
+
+      <section class="view" id="works-view" hidden>
+        <div class="page-content">
+          <div class="page-heading"><div class="intro-kicker"><span class="kicker-line"></span> LOCAL LIBRARY</div><h1>The <em>collection.</em></h1><p>Browse the works included in this Neuron Forge edition.</p></div>
+          <div class="library-toolbar"><div class="library-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input id="works-search" type="search" placeholder="Search titles…" autocomplete="off"></div><span class="library-count" id="library-count">Loading works…</span></div>
+          <div class="works-grid" id="works-grid"><div class="works-loading">Loading the collection…</div></div>
+        </div>
+      </section>
+
+      <section class="view" id="about-view" hidden>
+        <div class="page-content about-content">
+          <div class="page-heading"><div class="intro-kicker"><span class="kicker-line"></span> PROJECT NOTES</div><h1>About <em>Neuron Forge.</em></h1><p>An independent experiment in building language technology from the ground up.</p></div>
+          <div class="about-card">
+            <div class="about-card-mark">N</div>
+            <h2>A collection-first model experience</h2>
+            <p>The hosted edition searches the Shakespeare text files stored inside this repository and returns relevant passages. This keeps the source material inside the project and removes the unstable random-character demo that was previously on the site.</p>
+            <p>The repository also contains a separate decoder-only Transformer, tokenizer, training loop, checkpoint tools, and local training workflow for future experiments. The passage engine is not presented as a fully trained general-purpose chatbot.</p>
+            <div class="description-credit about-credit"><span class="credit-rule"></span><span>Created by - Smiling cat lab's</span></div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card"><span>Works</span><strong id="stat-works">—</strong><small>Separate local text files</small></div>
+            <div class="stat-card"><span>Training text</span><strong id="stat-words">—</strong><small>Words in the source collection</small></div>
+            <div class="stat-card"><span>Passages</span><strong id="stat-passages">—</strong><small>Indexed locally for search</small></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div class="mobile-scrim" id="mobile-scrim"></div>
 </body>
 </html>

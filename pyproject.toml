@@ -1,7 +1,7 @@
 [project]
 name = "neuronforge"
-version = "0.2.0"
-description = "A from-scratch language-model research project"
+version = "0.3.0"
+description = "A from-scratch language-model research project with a local Shakespeare corpus"
 requires-python = ">=3.10"
 dependencies = ["pyyaml>=6.0"]
 

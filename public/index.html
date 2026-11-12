@@ -33,19 +33,19 @@
     <div class="top-status"><span id="status-dot" class="dot"></span><span id="status-text">Connecting to model…</span></div>
   </header>
   <section class="intro">
-    <div><div class="eyebrow">Independent model research</div><h2>Build. Train. Generate.</h2><p>Talk to a compact Neuron Forge model trained from random initialization. Its weights are created by this project’s own training pipeline — no pretrained chatbot or hosted AI API is used.</p></div>
+    <div><div class="eyebrow">Independent model research</div><h2>Build. Train. Generate.</h2><p>Talk to a small character-level neural network trained from random initialization for this website. The repository also contains a separate GPT Transformer training engine — no pretrained chatbot or hosted AI API is used.</p></div>
     <div class="model-card"><div class="label">Active model</div><strong>Neuron Forge 0.2</strong><small id="model-meta">Checking model details…</small></div>
   </section>
   <section class="workspace">
     <aside><div class="side-inner"><div class="side-title">Model information</div>
-      <div class="metric"><span>Architecture</span><b>Decoder Transformer</b></div>
+      <div class="metric"><span>Architecture</span><b>Character RNN · web demo</b></div>
       <div class="metric"><span>Weights</span><b>Random initialization</b></div>
       <div class="metric"><span>Runtime</span><b>Cloud API</b></div>
-      <div class="notice">This hosted build is a tiny pipeline demo trained on a small example corpus. It proves the training and generation path works; it is not yet a knowledgeable general-purpose assistant.</div>
+      <div class="notice">This hosted demo is a small character-level recurrent neural network trained from scratch on original example conversations. Its answers are limited and can be incoherent. The full GPT Transformer training engine is included separately in the repository.</div>
     </div></aside>
     <section class="chat">
       <div class="chat-head"><strong>Chat with Neuron Forge</strong><button class="clear" id="clear" type="button">Clear chat</button></div>
-      <div id="messages" aria-live="polite"><div class="welcome" id="welcome"><div class="welcome-icon">✳</div><h3>Your model is ready to test</h3><p>Send a prompt below. Responses come from the project’s own small checkpoint, trained from scratch when this website is built.</p></div></div>
+      <div id="messages" aria-live="polite"><div class="welcome" id="welcome"><div class="welcome-icon">✳</div><h3>Your model is ready to test</h3><p>Send a prompt below. This lightweight demo model was trained from scratch when the website was built.</p></div></div>
       <form id="form"><div class="input-wrap"><textarea id="prompt" rows="1" maxlength="2000" placeholder="Message Neuron Forge…" required></textarea><div class="hint">Enter to send · Shift + Enter for a new line</div></div><button class="send" id="send" type="submit">Send ↗</button></form>
     </section>
   </section>

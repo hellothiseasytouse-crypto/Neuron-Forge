@@ -1,6 +1,7 @@
 """Vercel Python Function for Neuron Forge's conversational assistant."""
 from __future__ import annotations
 
+import base64
 import json
 import os
 from http.server import BaseHTTPRequestHandler
@@ -40,6 +41,22 @@ def gateway_token(headers=None) -> str:
     # not as a runtime environment variable.
     request_token = headers.get("x-vercel-oidc-token", "") if headers is not None else ""
     return os.environ.get("AI_GATEWAY_API_KEY") or request_token or os.environ.get("VERCEL_OIDC_TOKEN") or ""
+
+
+def oidc_diagnostics(token: str) -> dict:
+    """Return non-secret JWT metadata only; never log the token itself."""
+    if not token:
+        return {"credential_type": "missing"}
+    parts = token.split(".")
+    if len(parts) != 3:
+        return {"credential_type": "non_jwt_credential"}
+    try:
+        payload = parts[1] + "=" * (-len(parts[1]) % 4)
+        claims = json.loads(base64.urlsafe_b64decode(payload.encode("ascii")))
+        allowed = ("iss", "aud", "sub", "owner_id", "project_id", "environment", "exp")
+        return {"credential_type": "jwt", **{key: claims.get(key) for key in allowed if key in claims}}
+    except Exception:
+        return {"credential_type": "jwt_unparseable"}
 
 
 def selected_model() -> str:
@@ -125,9 +142,21 @@ def call_language_model(messages: list[dict[str, str]], context: str, headers=No
         with urlopen(request, timeout=50) as response:
             result = json.loads(response.read(2_000_000).decode("utf-8"))
     except HTTPError as exc:
-        # Keep credentials and provider internals out of the response.
-        if exc.code == 401 or exc.code == 403:
-            raise RuntimeError("AI Gateway authentication was rejected. Check Vercel OIDC for this project.") from None
+        # Log status and a bounded provider error body, but never credentials.
+        try:
+            provider_error = exc.read(4096).decode("utf-8", errors="replace")
+        except Exception:
+            provider_error = ""
+        provider_error = " ".join(provider_error.split())[:1200]
+        print(json.dumps({
+            "event": "gateway_http_error",
+            "status": exc.code,
+            "model": selected_model(),
+            "auth": oidc_diagnostics(token),
+            "provider_error": provider_error,
+        }, ensure_ascii=True), flush=True)
+        if exc.code in (401, 403):
+            raise RuntimeError("AI Gateway authentication was rejected. See sanitized Vercel diagnostics.") from None
         if exc.code == 429:
             raise RuntimeError("The free model is temporarily rate-limited. Please try again shortly.") from None
         raise RuntimeError(f"AI Gateway returned HTTP {exc.code}. Please try again.") from None

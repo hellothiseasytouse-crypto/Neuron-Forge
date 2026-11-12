@@ -35,8 +35,11 @@ def get_model():
     return _model
 
 
-def gateway_token() -> str:
-    return os.environ.get("AI_GATEWAY_API_KEY") or os.environ.get("VERCEL_OIDC_TOKEN") or ""
+def gateway_token(headers=None) -> str:
+    # Vercel Functions expose the per-invocation OIDC token as a request header,
+    # not as a runtime environment variable.
+    request_token = headers.get("x-vercel-oidc-token", "") if headers is not None else ""
+    return os.environ.get("AI_GATEWAY_API_KEY") or request_token or os.environ.get("VERCEL_OIDC_TOKEN") or ""
 
 
 def selected_model() -> str:
@@ -84,8 +87,8 @@ def normalize_messages(payload: dict) -> list[dict[str, str]]:
     return cleaned
 
 
-def call_language_model(messages: list[dict[str, str]], context: str) -> tuple[str, str]:
-    token = gateway_token()
+def call_language_model(messages: list[dict[str, str]], context: str, headers=None) -> tuple[str, str]:
+    token = gateway_token(headers)
     if not token:
         raise RuntimeError(
             "The hosted AI connection is not available. Vercel AI Gateway authentication "
@@ -155,7 +158,7 @@ class handler(BaseHTTPRequestHandler):
         try:
             details = get_model().describe()
             details.update({
-                "assistant_ready": bool(gateway_token()),
+                "assistant_ready": bool(gateway_token(self.headers)),
                 "assistant_model": selected_model(),
             })
             send_json(self, 200, {"ok": True, **details})
@@ -191,7 +194,7 @@ class handler(BaseHTTPRequestHandler):
                     context_parts.append(f"Work: {item.get('work', 'Unknown work')}\nReference excerpt: {excerpt}")
             context = "\n\n".join(context_parts)
 
-            answer, model_id = call_language_model(messages, context)
+            answer, model_id = call_language_model(messages, context, self.headers)
             send_json(self, 200, {
                 "text": answer,
                 "model": model_id,

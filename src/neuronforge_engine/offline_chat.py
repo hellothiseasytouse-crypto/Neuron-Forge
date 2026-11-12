@@ -220,7 +220,7 @@ class LocalConversationEngine:
                 return f"{expression} = {result}"
 
         if re.search(r"\b(?:fai|dying ember|subject|archive|personality-ai|feelings-ai|rule-ai|traits-ai)\b", lowered):
-            return self.rules.evidence_answer() + "\n\n" + self.rules.missing_evidence_answer()
+            return self.evidence_policy.evidence_answer() + "\n\n" + self.evidence_policy.missing_evidence_answer()
 
         if passages:
             first = passages[0]

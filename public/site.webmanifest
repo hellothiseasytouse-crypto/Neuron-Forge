@@ -1,0 +1,15 @@
+{
+  "name": "Neuron Forge — Smiling Cat Labs",
+  "short_name": "Neuron Forge",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c1118",
+  "theme_color": "#0c1118",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

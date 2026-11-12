@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+checkpoints/*
+!checkpoints/.gitkeep
+data/raw/*
+!data/raw/.gitkeep
+.env
+
+# Additional processed data and local runtime artefacts
+data/processed/*
+!data/processed/.gitkeep
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.log

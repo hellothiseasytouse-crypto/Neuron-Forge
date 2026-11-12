@@ -1,0 +1,27 @@
+[project]
+name = "neuronforge"
+version = "0.2.0"
+description = "A decoder-only language model trained from random initialization"
+requires-python = ">=3.10"
+dependencies = ["torch>=2.2", "pyyaml>=6.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+web = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
+
+[project.scripts]
+neuronforge = "neuronforge_engine.cli:main"
+neuronforge-foundation = "neuronforge.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+neuronforge_engine = ["static/*.html"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

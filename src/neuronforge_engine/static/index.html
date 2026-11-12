@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Neuron Forge</title>
+  <style>
+    :root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,sans-serif;background:#0b0d12;color:#edf0f7}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,#202b45 0,transparent 48%),#0b0d12}
+    main{width:min(850px,100%);height:min(820px,calc(100vh - 48px));display:flex;flex-direction:column;border:1px solid #293245;border-radius:22px;background:#111722;box-shadow:0 24px 90px #0008;overflow:hidden}
+    header{padding:24px 26px;border-bottom:1px solid #293245}h1{font-size:22px;margin:0 0 6px;letter-spacing:.02em}.sub{font-size:13px;color:#9ca9c0}
+    #messages{padding:22px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:14px}.bubble{max-width:85%;padding:13px 16px;border-radius:16px;white-space:pre-wrap;line-height:1.55;overflow-wrap:anywhere}.user{align-self:flex-end;background:#30446a}.assistant{align-self:flex-start;background:#1c2636;border:1px solid #2d3a50}.muted{color:#aab6ca;font-size:13px}
+    form{padding:18px;border-top:1px solid #293245;display:flex;gap:10px}textarea{flex:1;resize:vertical;min-height:54px;max-height:150px;border:1px solid #35435c;border-radius:14px;background:#0c121d;color:#fff;padding:14px;font:inherit;outline:none}button{border:0;border-radius:14px;padding:0 21px;background:#a9c5ff;color:#0d1729;font-weight:700;cursor:pointer}button:disabled{opacity:.5;cursor:wait}
+    footer{padding:0 20px 14px;color:#7f8ca3;font-size:11px;text-align:center}
+  </style>
+</head>
+<body><main>
+  <header><h1>Neuron Forge</h1><div class="sub">A local language model trained from random initialization · No hosted AI API</div></header>
+  <section id="messages" aria-live="polite"><div class="bubble assistant">Hello. I'm Neuron Forge. Send a message to generate a response from the model you trained.</div></section>
+  <form id="form"><textarea id="prompt" placeholder="Message Neuron Forge…" rows="2" required></textarea><button id="send" type="submit">Send</button></form>
+  <footer>Early-stage research model. Output quality depends on your training corpus and training time.</footer>
+</main>
+<script>
+const form=document.querySelector('#form'),input=document.querySelector('#prompt'),send=document.querySelector('#send'),messages=document.querySelector('#messages');
+function add(text,kind){const el=document.createElement('div');el.className='bubble '+kind;el.textContent=text;messages.appendChild(el);messages.scrollTop=messages.scrollHeight;return el;}
+form.addEventListener('submit',async event=>{event.preventDefault();const prompt=input.value.trim();if(!prompt)return;add(prompt,'user');input.value='';send.disabled=true;const waiting=add('Thinking…','assistant');try{const response=await fetch('/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:'User: '+prompt+'\nAssistant:',max_new_tokens:160,temperature:.8,top_k:40,top_p:.95})});const data=await response.json();if(!response.ok)throw new Error(data.detail||'Generation failed');waiting.textContent=data.text;}catch(error){waiting.textContent='Error: '+error.message;}finally{send.disabled=false;input.focus();messages.scrollTop=messages.scrollHeight;}});
+</script></body></html>

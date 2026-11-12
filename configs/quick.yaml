@@ -1,0 +1,27 @@
+# CPU-friendly smoke-training profile. This is for proving the pipeline works,
+# not for producing a capable general-purpose assistant.
+model:
+  block_size: 64
+  n_layer: 2
+  n_head: 2
+  n_embd: 64
+  dropout: 0.1
+tokenizer:
+  vocab_size: 320
+  min_frequency: 2
+  max_train_chars: 300000
+train:
+  data_path: data/raw/input.txt
+  batch_size: 8
+  max_steps: 100
+  learning_rate: 0.0005
+  min_learning_rate: 0.00005
+  warmup_steps: 10
+  eval_interval: 25
+  eval_batches: 4
+  weight_decay: 0.1
+  grad_clip: 1.0
+  gradient_accumulation_steps: 1
+  checkpoint_path: checkpoints/latest.pt
+  seed: 1337
+  device: auto

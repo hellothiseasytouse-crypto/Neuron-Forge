@@ -1,0 +1,14 @@
+model:
+  block_size: 128
+  n_layer: 4
+  n_head: 4
+  n_embd: 128
+  dropout: 0.1
+train:
+  data_path: data/raw/input.txt
+  batch_size: 32
+  max_steps: 5000
+  learning_rate: 0.0003
+  eval_interval: 250
+  checkpoint_path: checkpoints/latest.pt
+  seed: 1337

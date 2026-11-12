@@ -72,3 +72,10 @@ def test_subject_identity_is_not_invented(tmp_path):
     answer = engine.respond([{"role": "user", "content": "Who is FAI?"}])
     assert "labels FAI as the subject" in answer
     assert "objective as unknown" in answer
+
+
+
+def test_can_swear_request_is_supported(tmp_path):
+    engine = make_engine(tmp_path)
+    answer = engine.respond([{"role": "user", "content": "Can you swear?"}])
+    assert "fuck" in answer.lower()

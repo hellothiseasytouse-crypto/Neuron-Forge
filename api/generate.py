@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 import sys
@@ -40,6 +41,23 @@ def send_json(handler, status: int, payload: dict):
     handler.send_header("Content-Length", str(len(body)))
     handler.end_headers()
     handler.wfile.write(body)
+
+
+def should_search_shakespeare(message: str, corpus) -> bool:
+    lowered = message.lower()
+    library_terms = (
+        "shakespeare", "sonnet", "sonnets", "passage", "quote", "quotation",
+        "line from", "which play", "what play", "act ", "scene ", "monologue",
+        "character in", "speech in",
+    )
+    if any(term in lowered for term in library_terms):
+        return True
+    return any(
+        isinstance(work, dict)
+        and isinstance(work.get("title"), str)
+        and work["title"].lower() in lowered
+        for work in corpus.works
+    )
 
 
 def normalize_messages(payload: dict) -> list[dict[str, str]]:
@@ -118,7 +136,7 @@ class handler(BaseHTTPRequestHandler):
         try:
             latest_user = next(item["content"] for item in reversed(messages) if item["role"] == "user")
             corpus = get_corpus()
-            passages = corpus.search(latest_user, limit=2)
+            passages = corpus.search(latest_user, limit=2) if should_search_shakespeare(latest_user, corpus) else []
             answer = get_engine().respond(messages, passages)
             send_json(self, 200, {
                 "text": answer,

@@ -55,16 +55,16 @@ def _safe_math(expression: str) -> str | None:
         return None
 
 
-class PersonalityAI:
-    """Controls the assistant's conversational voice, not the reconstructed subject."""
+class ChatTone:
+    """Controls the website assistant's voice; it is not FAI's personality model."""
 
     def respond(self, message: str, mood: str) -> str:
         # Natural language and profanity are allowed; no profanity filter is applied.
         return "casual" if mood in {"frustrated", "excited"} or len(message.split()) < 12 else "clear"
 
 
-class FeelingsAI:
-    """Detects only obvious conversational cues; it does not claim to read feelings."""
+class ConversationSignals:
+    """Detects obvious cues in the current chat; this is not FAI's feelings model."""
 
     _cues = {
         "frustrated": ("angry", "annoyed", "frustrated", "fuck", "fucking", "shit", "damn"),
@@ -81,8 +81,8 @@ class FeelingsAI:
         return "neutral"
 
 
-class RuleAI:
-    """Applies the source document's evidence-versus-assumption rule."""
+class EvidencePolicy:
+    """Applies the source document's evidence-versus-assumption warning to answers."""
 
     def __init__(self, source_text: str):
         self.source_text = source_text
@@ -109,19 +109,14 @@ class RuleAI:
         )
 
 
-class TraitsAI:
-    """Keeps the four-system boundary explicit until source evidence is available."""
-
-    SYSTEMS = (
-        ("PERSONALITY-AI", "What the subject is like."),
-        ("FEELINGS-AI", "How the subject reacts emotionally."),
-        ("RULE-AI", "The behavioral rules discovered throughout the archive."),
-        ("TRAITS-AI", "The smaller characteristics that make the subject recognizable."),
-    )
-
-    def status(self) -> str:
-        names = ", ".join(name for name, _ in self.SYSTEMS)
-        return f"The four source-defined systems are present in the architecture: {names}."
+# Definitions copied from the original Dying Ember source document.
+# These are specifications, not claims that the subject has been reconstructed.
+FAI_SYSTEMS = (
+    ("PERSONALITY-AI", "What the subject is like."),
+    ("FEELINGS-AI", "How the subject reacts emotionally."),
+    ("RULE-AI", "The behavioral rules discovered throughout the archive."),
+    ("TRAITS-AI", "The smaller characteristics that make the subject recognizable."),
+)
 
 
 class LocalConversationEngine:
@@ -130,10 +125,9 @@ class LocalConversationEngine:
     def __init__(self, source_path: str | Path):
         path = Path(source_path)
         self.source_text = path.read_text(encoding="utf-8") if path.is_file() else ""
-        self.personality = PersonalityAI()
-        self.feelings = FeelingsAI()
-        self.rules = RuleAI(self.source_text)
-        self.traits = TraitsAI()
+        self.chat_tone = ChatTone()
+        self.conversation_signals = ConversationSignals()
+        self.evidence_policy = EvidencePolicy(self.source_text)
 
     @staticmethod
     def _last_user(messages: list[dict[str, str]]) -> str:
@@ -152,8 +146,8 @@ class LocalConversationEngine:
     def respond(self, messages: list[dict[str, str]], passages: list[dict[str, Any]] | None = None) -> str:
         message = self._last_user(messages).strip()
         lowered = message.lower().strip()
-        mood = self.feelings.detect(message)
-        tone = self.personality.respond(message, mood)
+        mood = self.conversation_signals.detect(message)
+        tone = self.chat_tone.respond(message, mood)
 
         if not message:
             return "Send me a message and we can start."
@@ -167,10 +161,10 @@ class LocalConversationEngine:
             )
 
         if re.search(r"\b(?:what is|who is|tell me about|explain)\b.*\b(?:fai|dying ember)\b|\bfai-ai\b|\bthe four systems\b", lowered):
-            return self.rules.evidence_answer()
+            return self.evidence_policy.evidence_answer()
 
         if re.search(r"\b(?:reconstruct|reconstruction|simulate|copy|personality)\b", lowered) and re.search(r"\b(?:fai|subject|archive)\b", lowered):
-            return self.rules.missing_evidence_answer()
+            return self.evidence_policy.missing_evidence_answer()
 
         if re.fullmatch(r"(?:hi|hello|hey|yo|sup|heya|hii+)[!. ]*", lowered):
             return "Hey. I'm here. What's up?"

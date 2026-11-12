@@ -11,13 +11,14 @@
   const worksGrid = $("#works-grid");
   const worksSearch = $("#works-search");
   let catalog = [];
+  let conversationHistory = [];
   let sending = false;
 
   const welcomeMarkup = `
     <div class="welcome-state" id="welcome-state">
       <div class="welcome-orbit"><span class="orbit-dot"></span><span class="orbit-core">N</span><span class="orbit-star">✦</span></div>
-      <h2>What shall we explore?</h2>
-      <p>Start with a work, a character, or an idea from the collection.</p>
+      <h2>What are you thinking about?</h2>
+      <p>Ask a question, explore an idea, or start a conversation about Shakespeare.</p>
       <div class="prompt-grid">
         <button class="prompt-card" data-prompt="Find passages about ambition in Macbeth" type="button"><span class="prompt-icon violet">♜</span><span><strong>Ambition in Macbeth</strong><small>Power, choice, and consequence</small></span><span class="prompt-arrow">↗</span></button>
         <button class="prompt-card" data-prompt="Show me passages about love in Romeo and Juliet" type="button"><span class="prompt-icon rose">♡</span><span><strong>Love in Romeo and Juliet</strong><small>Famous scenes and lines</small></span><span class="prompt-arrow">↗</span></button>
@@ -60,6 +61,7 @@
 
   function clearConversation() {
     messages.innerHTML = welcomeMarkup;
+    conversationHistory = [];
     bindPromptCards();
     input.value = "";
     updateCount();
@@ -80,22 +82,29 @@
     if (!prompt || sending) return;
     sending = true;
     addMessage(prompt, "user");
+    conversationHistory.push({ role: "user", content: prompt });
+    conversationHistory = conversationHistory.slice(-10);
     input.value = "";
     updateCount();
     sendButton.disabled = true;
-    const pending = addMessage("Searching the local Shakespeare collection…", "assistant");
+    const pending = addMessage("Thinking through your question…", "assistant");
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, max_results: 2 }),
+        body: JSON.stringify({ prompt, messages: conversationHistory }),
         cache: "no-store"
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "The request could not be completed.");
-      pending.body.textContent = data.text || "No matching passage was found.";
+      pending.body.textContent = data.text || "I couldn't form an answer to that question.";
+      if (data.text) {
+        conversationHistory.push({ role: "assistant", content: data.text });
+        conversationHistory = conversationHistory.slice(-10);
+      }
     } catch (error) {
-      pending.body.textContent = "I couldn't search the local collection: " + error.message;
+      conversationHistory.pop();
+      pending.body.textContent = "I couldn't reach the AI model: " + error.message;
       pending.node.classList.add("error");
     } finally {
       sending = false;
@@ -180,9 +189,11 @@
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || "Library unavailable");
       catalog = Array.isArray(data.works_catalog) ? data.works_catalog : [];
-      $("#top-status").textContent = "Local library ready";
-      $("#sidebar-status").textContent = "Library ready";
-      $("#sidebar-status-detail").textContent = formatNumber(data.training_words) + " source words";
+      $("#top-status").textContent = data.assistant_ready ? "AI assistant ready" : "AI connection unavailable";
+      $("#sidebar-status").textContent = data.assistant_ready ? "Assistant ready" : "Assistant offline";
+      $("#sidebar-status-detail").textContent = data.assistant_ready
+        ? "AI chat · local library"
+        : "Vercel AI Gateway not connected";
       $("#status-pip").classList.add("ready");
       $("#stat-works").textContent = formatNumber(catalog.length);
       $("#stat-words").textContent = formatNumber(data.training_words);
@@ -190,7 +201,7 @@
       renderSidebar(catalog);
       renderWorks(catalog);
     } catch (error) {
-      $("#top-status").textContent = "Library unavailable";
+      $("#top-status").textContent = "Assistant unavailable";
       $("#sidebar-status").textContent = "Offline";
       $("#sidebar-status-detail").textContent = error.message;
     }

@@ -189,11 +189,11 @@
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || "Library unavailable");
       catalog = Array.isArray(data.works_catalog) ? data.works_catalog : [];
-      $("#top-status").textContent = data.assistant_ready ? "AI assistant ready" : "AI connection unavailable";
-      $("#sidebar-status").textContent = data.assistant_ready ? "Assistant ready" : "Assistant offline";
+      $("#top-status").textContent = data.assistant_ready ? "Local chat ready" : "Local chat unavailable";
+      $("#sidebar-status").textContent = data.assistant_ready ? "Local chat ready" : "Local chat unavailable";
       $("#sidebar-status-detail").textContent = data.assistant_ready
-        ? "AI chat · local library"
-        : "Vercel AI Gateway not connected";
+        ? "Offline chat · FAI source loaded"
+        : "Local engine unavailable";
       $("#status-pip").classList.toggle("ready", Boolean(data.assistant_ready));
       $("#stat-works").textContent = formatNumber(catalog.length);
       $("#stat-words").textContent = formatNumber(data.training_words);

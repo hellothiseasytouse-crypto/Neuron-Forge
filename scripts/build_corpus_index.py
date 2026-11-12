@@ -35,7 +35,7 @@ def main() -> None:
         words = len(WORD_RE.findall(body))
         total_words += words
         if "sonnet" in path.name.lower():
-            sonnet_count = len(re.findall(r"(?im)^Sonnet\s+", body))
+            sonnet_count = len(re.findall(r"(?im)^Sonnet\s+\d+\b", body))
         works.append({
             "title": title,
             "category": category,

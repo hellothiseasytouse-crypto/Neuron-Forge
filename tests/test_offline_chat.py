@@ -58,3 +58,17 @@ def test_chat_history_remembers_name_within_conversation(tmp_path):
         {"role": "user", "content": "Do you remember my name?"},
     ]
     assert "Alex" in engine.respond(messages)
+
+
+
+def test_engine_handles_nested_arithmetic(tmp_path):
+    engine = make_engine(tmp_path)
+    answer = engine.respond([{"role": "user", "content": "what is 12 * (3 + 2)?"}])
+    assert answer == "12 * (3 + 2) = 60"
+
+
+def test_subject_identity_is_not_invented(tmp_path):
+    engine = make_engine(tmp_path)
+    answer = engine.respond([{"role": "user", "content": "Who is FAI?"}])
+    assert "labels FAI as the subject" in answer
+    assert "objective as unknown" in answer

@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# The hosted demo uses only the Python standard library. PyTorch remains an
-# optional dependency for full GPT training outside the serverless web build.
+# Build a searchable local index from the source text files committed in this repository.
 python scripts/prepare_data.py
-python scripts/train_web_model.py
-test -s public/model.json
-echo "Neuron Forge web model built successfully."
+python scripts/build_corpus_index.py
+test -s public/shakespeare_index.json
+echo "Neuron Forge Shakespeare corpus index built successfully."

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Neuron Forge">
+  <defs>
+    <linearGradient id="brain" x1="18" y1="17" x2="111" y2="111" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e2ccff"/>
+      <stop offset=".48" stop-color="#a887ff"/>
+      <stop offset="1" stop-color="#6d46e8"/>
+    </linearGradient>
+    <linearGradient id="letter" x1="43" y1="39" x2="88" y2="92" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff"/>
+      <stop offset=".52" stop-color="#e4d7ff"/>
+      <stop offset="1" stop-color="#a98cff"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="#100d1d"/>
+  <rect x="1" y="1" width="126" height="126" rx="29" fill="none" stroke="#5d42a5" stroke-opacity=".65" stroke-width="2"/>
+  <g fill="none" stroke="url(#brain)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+    <path d="M63.8 25c-5.2-8.8-18.2-10.6-25.4-2.1-10.2-2.2-20.3 6-19.2 17.1-9.8 7.5-9.1 22.7-.2 29.3-4.6 12.6 3.1 25.4 15.8 26.8 4.2 10.2 15.5 14.5 25.7 8.2V25Z"/>
+    <path d="M64.2 25c5.2-8.8 18.2-10.6 25.4-2.1 10.2-2.2 20.3 6 19.2 17.1 9.8 7.5 9.1 22.7.2 29.3 4.6 12.6-3.1 25.4-15.8 26.8-4.2 10.2-15.5 14.5-25.7 8.2V25Z"/>
+    <path d="M31 44c10-1 17 4 21 13M96 44c-10-1-17 4-21 13M29 78c9-4 17-1 23 7M99 78c-9-4-17-1-23 7"/>
+  </g>
+  <g fill="#f4eaff" filter="url(#glow)">
+    <circle cx="30" cy="44" r="3.1"/><circle cx="98" cy="44" r="3.1"/>
+    <circle cx="29" cy="78" r="3.1"/><circle cx="99" cy="78" r="3.1"/>
+    <circle cx="47" cy="22" r="2.5"/><circle cx="81" cy="22" r="2.5"/>
+  </g>
+  <path d="M42 87V42l44 45V42" fill="none" stroke="url(#letter)" stroke-width="9" stroke-linecap="square" stroke-linejoin="miter" filter="url(#glow)"/>
+  <path d="M42 42h1M86 87h-1" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+</svg>

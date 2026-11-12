@@ -6,7 +6,7 @@
   "functions": {
     "api/generate.py": {
       "maxDuration": 60,
-      "includeFiles": "{src/neuronforge_engine/**,checkpoints/latest.pt}"
+      "includeFiles": "{src/neuronforge_engine/web_runtime.py,public/model.json}"
     }
   }
 }

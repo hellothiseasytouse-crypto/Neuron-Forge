@@ -169,8 +169,8 @@ class handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", "0"))
         except ValueError:
             return send_json(self, 400, {"error": "Invalid content length"})
-        if length < 1 or length > 18000:
-            return send_json(self, 413, {"error": "Request must be between 1 byte and 18 KB"})
+        if length < 1 or length > 60000:
+            return send_json(self, 413, {"error": "Request must be between 1 byte and 60 KB"})
 
         try:
             payload = json.loads(self.rfile.read(length))

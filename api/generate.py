@@ -1,27 +1,25 @@
-"""Vercel Python function for the hosted Neuron Forge demo model."""
+"""Vercel Python Function for the standard-library Neuron Forge web demo."""
+from __future__ import annotations
 import json
-import sys
-from pathlib import Path
-from threading import Lock
 from http.server import BaseHTTPRequestHandler
+from pathlib import Path
+import sys
+from threading import Lock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
+from neuronforge_engine.web_runtime import load_web_model  # noqa: E402
 
-_runtime = None
-_runtime_lock = Lock()
+_model = None
+_model_lock = Lock()
 
-
-def get_runtime():
-    global _runtime
-    if _runtime is None:
-        with _runtime_lock:
-            if _runtime is None:
-                from neuronforge_engine.checkpoint import load_model
-                checkpoint_path = ROOT / "checkpoints" / "latest.pt"
-                _runtime = load_model(checkpoint_path, device="cpu")
-    return _runtime
-
+def get_model():
+    global _model
+    if _model is None:
+        with _model_lock:
+            if _model is None:
+                _model = load_web_model(ROOT / "public" / "model.json")
+    return _model
 
 def send_json(handler, status, payload):
     body = json.dumps(payload).encode("utf-8")
@@ -32,25 +30,22 @@ def send_json(handler, status, payload):
     handler.end_headers()
     handler.wfile.write(body)
 
-
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path.split("?", 1)[0] != "/api/generate":
             return send_json(self, 404, {"ok": False, "error": "Not found"})
         try:
-            model, tokenizer, checkpoint = get_runtime()
+            model = get_model()
             send_json(self, 200, {
-                "ok": True,
-                "model": "Neuron Forge 0.2",
-                "parameters": model.num_parameters(),
-                "training_steps": int(checkpoint.get("step", 0)),
+                "ok": True, "model": "Neuron Forge Web RNN",
+                "architecture": "character-level recurrent neural network",
+                "parameters": model.parameter_count,
+                "training_steps": model.training_steps,
+                "training_chars": model.training_chars,
                 "trained_from_scratch": True,
             })
-        except Exception:
-            send_json(self, 503, {
-                "ok": False,
-                "error": "The model checkpoint is not available yet. Check the deployment build logs.",
-            })
+        except Exception as exc:
+            send_json(self, 503, {"ok": False, "error": f"Web model unavailable: {exc}"})
 
     def do_POST(self):
         if self.path.split("?", 1)[0] != "/api/generate":
@@ -70,38 +65,22 @@ class handler(BaseHTTPRequestHandler):
                 raise ValueError("Prompt must contain 1–2,000 characters")
             max_new_tokens = int(payload.get("max_new_tokens", 96))
             temperature = float(payload.get("temperature", 0.8))
-            top_k = int(payload.get("top_k", 40))
-            top_p = float(payload.get("top_p", 0.95))
+            top_k = int(payload.get("top_k", 5))
             if not 1 <= max_new_tokens <= 128:
                 raise ValueError("max_new_tokens must be between 1 and 128")
-            if not 0 <= temperature <= 2:
-                raise ValueError("temperature must be between 0 and 2")
-            if not 1 <= top_k <= 320:
-                raise ValueError("top_k must be between 1 and 320")
-            if not 0 < top_p <= 1:
-                raise ValueError("top_p must be greater than 0 and at most 1")
+            if not 0.15 <= temperature <= 1.5:
+                raise ValueError("temperature must be between 0.15 and 1.5")
+            if not 1 <= top_k <= 128:
+                raise ValueError("top_k must be between 1 and 128")
         except (json.JSONDecodeError, TypeError, ValueError) as exc:
             return send_json(self, 400, {"error": str(exc)})
-
         try:
-            from neuronforge_engine.generation import generate_from_model
-            model, tokenizer, _ = get_runtime()
-            model_prompt = "User: " + prompt.strip() + "\nAssistant:"
-            generated = generate_from_model(
-                model, tokenizer, model_prompt,
-                max_new_tokens=max_new_tokens,
-                temperature=temperature,
-                top_k=top_k,
-                top_p=top_p,
-                repetition_penalty=1.05,
-                device="cpu",
-            )
-            answer = generated[len(model_prompt):].strip() if generated.startswith(model_prompt) else generated.strip()
-            send_json(self, 200, {"text": answer, "model": "Neuron Forge 0.2"})
-        except Exception:
-            send_json(self, 503, {
-                "error": "Generation failed in the hosted model runtime. Please try a shorter prompt.",
-            })
+            model = get_model()
+            seed = "User: " + prompt.strip() + "\nAssistant:"
+            answer = model.generate(seed, max_new_tokens, temperature, top_k)
+            send_json(self, 200, {"text": answer, "model": "Neuron Forge Web RNN"})
+        except Exception as exc:
+            send_json(self, 503, {"error": f"Hosted generation failed: {exc}"})
 
     def log_message(self, format, *args):
         return

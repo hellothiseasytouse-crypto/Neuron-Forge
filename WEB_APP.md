@@ -1,15 +1,19 @@
 # Neuron Forge website
 
-The website is served from public/index.html. Its same-origin /api/generate Python Function loads a small character-level recurrent neural network from public/model.json.
+The website is served from `public/index.html`. Its stylesheet and client behavior are separated into `public/assets/neuron-forge.css` and `public/assets/neuron-forge.js`. The app icon is `public/favicon.svg`, and the browser/app identity is in `public/site.webmanifest`.
 
-## Hosted web model
+## Hosted model path
 
-The deployment build creates an original conversation corpus and trains the compact character RNN from random initialization using only the Python standard library. The model weights are generated during the build and packaged with the Python Function. Inference runs on the server; the visitor's computer only renders the website.
+The Vercel build runs `scripts/prepare_data.py` to assemble the local text files under `data/shakespeare/`, then `scripts/build_corpus_index.py` to create `public/shakespeare_index.json`.
 
-This is a small experimental web demo, not a knowledgeable general-purpose assistant. The full decoder-only GPT Transformer, byte-level BPE tokenizer, PyTorch training loop, checkpoints, and generation sampler remain in src/neuronforge_engine/ for larger training runs. Install the optional training extra to use the PyTorch engine locally.
+The same-origin `/api/generate` Python Function loads this bundled index and ranks matching passages. The runtime does not call a third-party model, text API, or external corpus host. It returns excerpts from the local collection rather than hallucinating free-form answers.
+
+## Repository training engine
+
+The separate decoder-only GPT, byte-level BPE tokenizer, PyTorch training loop, checkpoint format, and generation sampler remain under `src/neuronforge_engine/`. Assemble the bundled text with `python scripts/prepare_data.py`, then point a training configuration at `data/processed/shakespeare_corpus.txt` for a local training experiment.
 
 ## Hosting limits
 
-The Vercel web demo runs short inference requests against a small bundled checkpoint. It does not provide persistent online training, user-uploaded datasets, GPU training, or durable user checkpoints. Those require a separate persistent training service and durable model storage.
+The hosted passage engine is not a trained general-purpose assistant and cannot answer questions that are not represented by the collection. Vercel serves indexed passages; persistent online training, user-uploaded corpora, GPU training, and durable checkpoints require a separate persistent training service and storage.
 
-The original starter files in src/neuronforge/ remain unchanged.
+The original starter files in `src/neuronforge/` remain unchanged.

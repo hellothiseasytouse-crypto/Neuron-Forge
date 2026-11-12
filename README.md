@@ -1,8 +1,14 @@
 # Neuron Forge
 
-**An experimental language model built from random initialization.** Neuron Forge implements its own byte-level BPE tokenizer, decoder-only Transformer, training loop, checkpoint format, generation sampler, and local interfaces. It does not load pretrained model weights or call a hosted AI API.
+**An independent language-model research project.** Neuron Forge contains a from-scratch decoder-only Transformer, byte-level BPE tokenizer, training loop, checkpoint tools, and local inference interfaces. The hosted website currently uses a separate Shakespeare corpus engine that searches the text files stored in this repository.
 
-> **Status:** working educational training engine. A functioning codebase is not the same thing as a trained, capable general-purpose AI. Model quality depends on corpus quality, model size, training time, and available compute.
+## Hosted website
+
+Open **[Neuron Forge](https://neuron-forge-cyber-0ab0.vercel.app)**.
+
+The website does not call an external AI API. Its search index is built from the local files under `data/shakespeare/`. The current collection contains 37 plays, all 154 sonnets, and the associated poetry files present in the selected text edition. It returns relevant passages from those files instead of sampling random characters from an undertrained network.
+
+The website's corpus engine is a text retrieval system, not a fully trained general-purpose chatbot. It is deliberately described that way in the interface.
 
 ## What is included
 
@@ -11,7 +17,8 @@
 - Training from random initialization using AdamW, warmup/cosine learning-rate scheduling, gradient accumulation, clipping, validation loss, and checkpoints.
 - Generation with temperature, top-k, top-p, and repetition penalty.
 - CLI for training, generation, terminal chat, and local serving.
-- Optional FastAPI endpoint and browser chat page.
+- An offline Shakespeare text collection, organized by play and poetry.
+- A local corpus preparation and passage-indexing pipeline for the hosted site.
 - Tests and GitHub Actions CI.
 
 ## Quick start
@@ -20,36 +27,36 @@ Requirements: Python 3.10+ and a compatible PyTorch installation.
 
 ```bash
 python -m venv .venv
-# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows PowerShell: .venv\\Scripts\\Activate.ps1
 # macOS/Linux: source .venv/bin/activate
 python -m pip install --upgrade pip
-pip install -e ".[dev]"
+pip install -e ".[dev,training]"
 
-# Create a tiny example corpus (for pipeline testing only)
+# Assemble the bundled works into a training corpus
 python scripts/prepare_data.py
 
-# Train a small model from scratch
+# Train a small Transformer from random initialization
 neuronforge train --config configs/quick.yaml
 
 # Generate text
 neuronforge generate --checkpoint checkpoints/latest.pt --prompt "Hello"
 ```
 
-## Train on your own dataset
+## Train on the bundled Shakespeare corpus
 
-Put UTF-8 `.txt` files in a local folder, then combine them:
-
-```bash
-python scripts/prepare_corpus.py --input ./my-text-files --output data/processed/corpus.txt
-```
-
-Set `train.data_path` in `configs/base.yaml` to `data/processed/corpus.txt`, review the model/training sizes for your hardware, and run:
+The source files are stored separately under `data/shakespeare/plays/` and `data/shakespeare/poetry/`. Prepare the combined corpus with:
 
 ```bash
-neuronforge train --config configs/base.yaml
+python scripts/prepare_data.py
 ```
 
-Resume a run with `neuronforge train --config configs/base.yaml --resume`. Checkpoints are written to `checkpoints/`, which is ignored by Git.
+The combined file is written to `data/processed/shakespeare_corpus.txt`. Review the model and training sizes in `configs/` for your hardware before starting a run.
+
+To rebuild the website's local search index:
+
+```bash
+python scripts/build_corpus_index.py
+```
 
 ## Local browser chat
 
@@ -63,26 +70,31 @@ Open `http://127.0.0.1:8000`. The server binds to localhost by default. Do not e
 ## Repository structure
 
 ```text
-src/neuronforge/             # original starter files supplied in the ZIP (kept unchanged)
-src/neuronforge_engine/      # complete training and inference implementation
-  config.py                  # validated model and training configuration
-  tokenizer.py               # byte-level BPE
-  data.py                    # corpus encoding and batch sampling
-  model.py                   # causal GPT-style Transformer
-  training.py                # optimization, evaluation and checkpointing
-  generation.py              # sampling and text generation
-  checkpoint.py              # checkpoint serialization and restore
-  cli.py                     # train / generate / chat / serve commands
-  api.py                     # optional local FastAPI API
-  static/index.html          # local browser interface
-configs/                     # quick and base training profiles
-scripts/                     # corpus preparation tools
- tests/                      # unit tests
- docs/                       # architecture, training, data and roadmap notes
+src/neuronforge/                  # original starter files supplied in the ZIP (kept unchanged)
+src/neuronforge_engine/           # GPT training and local corpus engine
+  config.py                       # validated model and training configuration
+  tokenizer.py                    # byte-level BPE
+  data.py                         # corpus encoding and batch sampling
+  model.py                        # causal GPT-style Transformer
+  training.py                     # optimization, evaluation and checkpointing
+  generation.py                   # sampling and text generation
+  checkpoint.py                   # checkpoint serialization and restore
+  web_runtime.py                  # local Shakespeare passage search
+  cli.py                           # train / generate / chat / serve commands
+api/                               # hosted web function
+scripts/                           # corpus preparation and local index generation
+data/shakespeare/plays/            # individual play texts
+data/shakespeare/poetry/           # sonnets and other poetry
+configs/                           # quick and base training profiles
+tests/                             # unit tests
+docs/                              # architecture, training, data and roadmap notes
+public/                            # website UI, icon, styles, and browser script
 ```
 
-## Important limitations
+## Limitations
 
-The included sample corpus is repetitive and exists only to smoke-test the pipeline. It will not produce an intelligent assistant. A capable foundation model requires large and diverse licensed datasets, substantial GPU compute, long training runs, evaluation, and safety testing. This project is a real from-scratch training implementation, not a claim that those requirements have already been met.
+The hosted passage engine returns material from the bundled collection; it does not create an original response to every possible question. The full Transformer code is a genuine training implementation, but a capable general-purpose model still requires much more training data, compute, evaluation, and safety work than this repository currently includes.
+
+The collection is an edition of surviving and attributed works. Lost works cannot be reconstructed, and some collaborative or disputed attributions cannot be settled by a text corpus.
 
 See [docs/TRAINING_GUIDE.md](docs/TRAINING_GUIDE.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/DATA_AND_SAFETY.md](docs/DATA_AND_SAFETY.md).

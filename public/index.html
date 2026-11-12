@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#100d1d">
   <meta name="application-name" content="Neuron Forge">
-  <meta name="description" content="Neuron Forge is a general-purpose AI assistant that writes original answers and uses its Shakespeare library as optional reference material.">
+  <meta name="description" content="Neuron Forge is an offline conversation prototype organized around the original Dying Ember FAI source document.">
   <title>Neuron Forge</title>
-  <link rel="icon" href="/neuron-forge-mark.svg?v=20261112-3" type="image/svg+xml">
-  <link rel="manifest" href="/site.webmanifest?v=20261112-3">
-  <link rel="stylesheet" href="/assets/neuron-forge.css?v=20261112-3">
-  <link rel="stylesheet" href="/assets/neuron-forge-brand.css?v=20261112-3">
-  <script src="/assets/neuron-forge.js?v=20261112-3" defer></script>
+  <link rel="icon" href="/neuron-forge-mark.svg?v=20261112-4" type="image/svg+xml">
+  <link rel="manifest" href="/site.webmanifest?v=20261112-4">
+  <link rel="stylesheet" href="/assets/neuron-forge.css?v=20261112-4">
+  <link rel="stylesheet" href="/assets/neuron-forge-brand.css?v=20261112-4">
+  <script src="/assets/neuron-forge.js?v=20261112-4" defer></script>
 </head>
 <body>
   <div class="app-shell" id="app-shell">
@@ -19,7 +19,7 @@
       <div class="sidebar-brand-row">
         <a class="brand" href="/" aria-label="Neuron Forge home">
           <span class="brand-mark" aria-hidden="true">
-            <img src="/neuron-forge-mark.svg?v=20261112-3" alt="">
+            <img src="/neuron-forge-mark.svg?v=20261112-4" alt="">
           </span>
           <span class="brand-copy"><strong>Neuron Forge</strong><small>Smiling Cat Labs</small></span>
         </a>
@@ -76,7 +76,7 @@
           <div class="breadcrumb"><span>Neuron Forge</span><span class="crumb-slash">/</span><strong id="view-heading">Chat</strong></div>
         </div>
         <div class="topbar-right">
-          <span class="model-pill"><i></i><span id="top-status">Local corpus</span></span>
+          <span class="model-pill"><i></i><span id="top-status">Local FAI engine</span></span>
           <button class="icon-button clear-button" id="clear-chat" type="button" aria-label="Clear conversation" title="Clear conversation">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-.8 13H6.8L6 7m4 4v5m4-5v5"/></svg>
           </button>
@@ -88,7 +88,7 @@
           <div class="intro-block">
             <div class="intro-kicker"><span class="kicker-line"></span> THE SHAKESPEARE COLLECTION <span class="kicker-line"></span></div>
             <h1>Think beyond <em>the text.</em></h1>
-            <p class="intro-description">Ask about anything. Neuron Forge understands your prompt, forms an original answer, and draws on its Shakespeare collection only when that reference is relevant.</p>
+            <p class="intro-description">Talk with Neuron Forge locally. It can handle basic conversation, simple calculations, and questions about its local reference material while its from-scratch language model is being trained.</p>
             <div class="description-credit">
               <span class="credit-rule"></span>
               <span>Created by - Smiling cat lab's</span>
@@ -126,7 +126,7 @@
             </form>
           </div>
 
-          <p class="quiet-note">Answers are composed by a hosted language model. The Shakespeare collection is optional context, not a script to copy.</p>
+          <p class="quiet-note">Runs through a local conversation engine. No hosted language model or external AI API is called.</p>
         </div>
       </section>
 
@@ -143,9 +143,9 @@
           <div class="page-heading"><div class="intro-kicker"><span class="kicker-line"></span> PROJECT NOTES</div><h1>About <em>Neuron Forge.</em></h1><p>An independent experiment in building language technology from the ground up.</p></div>
           <div class="about-card">
             <div class="about-card-mark">N</div>
-            <h2>A collection-first model experience</h2>
-            <p>The hosted assistant uses a language model to understand questions and compose original answers. The Shakespeare collection is retrieved as optional context when relevant; passages are references, not ready-made replies.</p>
-            <p>The local library currently indexes 42 source texts, including 37 plays and the 154 sonnets. It can supply relevant material to the assistant, but the model writes its response in its own words. The repository also contains a separate from-scratch Transformer experiment; that experimental model is not yet the hosted conversational model.</p>
+            <h2>An offline FAI-centered conversation prototype</h2>
+            <p>This version answers through a local conversation engine. It does not connect to Vercel AI Gateway or call an external AI API. The original Dying Ember source document is stored in the repository and is treated as the authority for the four FAI systems.</p>
+            <p>The repository also contains a from-scratch GPT-style Transformer and training pipeline, but no trained general-purpose checkpoint is available yet. Until that model is trained, this offline prototype supports basic conversation, simple arithmetic, source-grounded answers about Dying Ember, and searches of the local Shakespeare collection. It does not pretend to have broad intelligence it has not learned.</p>
             <div class="description-credit about-credit"><span class="credit-rule"></span><span>Created by - Smiling cat lab's</span></div>
           </div>
           <div class="stats-grid">

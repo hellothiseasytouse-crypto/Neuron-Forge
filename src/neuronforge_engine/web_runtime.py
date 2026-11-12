@@ -25,6 +25,7 @@ class ShakespeareCorpus:
         self.works = payload.get("works", [])
         self.passages = payload.get("passages", [])
         self.word_count = int(payload.get("word_count", 0))
+        self.sonnet_count = int(payload.get("sonnet_count", 0))
         self.index: dict[str, list[tuple[int, int]]] = defaultdict(list)
         self.document_frequency: Counter[str] = Counter()
         for i, passage in enumerate(self.passages):
@@ -54,6 +55,8 @@ class ShakespeareCorpus:
             "works": len(self.works),
             "passages": len(self.passages),
             "training_words": self.word_count,
+            "sonnets": self.sonnet_count,
+            "works_catalog": self.works,
             "trained_from_local_files": True,
         }
 

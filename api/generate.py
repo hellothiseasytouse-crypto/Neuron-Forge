@@ -198,8 +198,11 @@ class handler(BaseHTTPRequestHandler):
                 "assistant": "Neuron Forge",
             })
         except RuntimeError as exc:
+            # Log only the sanitized, locally-authored error message; never log credentials or prompts.
+            print(f"Neuron Forge model request failed: {exc}", flush=True)
             send_json(self, 503, {"error": str(exc)})
-        except Exception:
+        except Exception as exc:
+            print(f"Neuron Forge unexpected failure: {type(exc).__name__}", flush=True)
             send_json(self, 503, {"error": "Neuron Forge could not complete that response. Please try again."})
 
     def log_message(self, format, *args):

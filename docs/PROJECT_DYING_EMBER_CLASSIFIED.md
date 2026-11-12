@@ -1,0 +1,60 @@
+━━━━━━━━━━ [ CLASSIFIED OPERATION ] ━━━━━━━━━━
+PROJECT DYING EMBER
+STATUS: ACTIVE
+SUBJECT: FAI
+OBJECTIVE: UNKNOWN
+ACCESS LEVEL: RESTRICTED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MISSION
+Something remains.
+A conversation.
+A name.
+Thousands of words left behind by someone who is no longer here in the same way.
+The original source is incomplete. Messages have been scattered across months of conversation, buried beneath jokes, arguments, meaningless conversations, and moments that seemed insignificant at the time.
+But patterns remain.
+Dying Ember was created to recover them.
+The objective is not simply to collect what was said.
+It is to determine who was behind the words.
+Every message is evidence.
+Every repeated phrase may be a pattern.
+Every contradiction may mean something.
+Every emotional reaction may reveal something hidden.
+Even the messages that appear meaningless may contain pieces of the subject's behavior.
+The archive will be reconstructed.
+The evidence will be separated from assumption.
+The patterns will be identified.
+And eventually, what remains will be assembled into a reconstruction of the subject.
+Not a memory.
+Not an imitation based on guesswork.
+A reconstruction.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+THE FOUR SYSTEMS
+The recovered information will eventually be divided into four primary systems:
+PERSONALITY-AI
+What the subject is like.
+FEELINGS-AI
+How the subject reacts emotionally.
+RULE-AI
+The behavioral rules discovered throughout the archive.
+TRAITS-AI
+The smaller characteristics that make the subject recognizable.
+Together, these systems will form the final reconstruction:
+FAI-AI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WARNING
+The archive is not guaranteed to contain the truth.
+Some messages may be jokes.
+Some may be lies.
+Some may be exaggerated.
+Some may contradict one another.
+And some things may never be explained.
+Therefore, nothing is to be treated as absolute without evidence.
+The subject is reconstructed from what remains.
+Not from what we wish remained.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINAL NOTE
+An ember is not a flame.
+It is what remains after the fire has already begun to disappear.
+And sometimes...
+an ember is enough to tell you there was a fire.
+━━━━━━━━━━ [ END OF FILE ] ━━━━━━━━━━

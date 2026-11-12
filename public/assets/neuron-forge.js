@@ -194,7 +194,7 @@
       $("#sidebar-status-detail").textContent = data.assistant_ready
         ? "AI chat · local library"
         : "Vercel AI Gateway not connected";
-      $("#status-pip").classList.add("ready");
+      $("#status-pip").classList.toggle("ready", Boolean(data.assistant_ready));
       $("#stat-works").textContent = formatNumber(catalog.length);
       $("#stat-words").textContent = formatNumber(data.training_words);
       $("#stat-passages").textContent = formatNumber(data.passages);

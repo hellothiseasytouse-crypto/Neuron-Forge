@@ -200,6 +200,9 @@ class LocalConversationEngine:
             name = self._name_from_history(messages)
             return f"Got it, {name}. I'll use that name during this conversation."
 
+        if re.search(r"\b(?:can you swear|can you curse|use profanity|say a swear)\b", lowered):
+            return "Yeah, fuck yeah. I can use profanity when it fits; I won't force it into every reply."
+
         if re.search(r"\b(?:thanks|thank you|thx)\b", lowered):
             return "You're welcome. What else?"
 

@@ -1,24 +1,42 @@
 # Neuron Forge
 
-**An independent language-model research project.** Neuron Forge contains a from-scratch decoder-only Transformer, byte-level BPE tokenizer, training loop, checkpoint tools, and local inference interfaces. The hosted website currently uses a separate Shakespeare corpus engine that searches the text files stored in this repository.
+**An offline AI research project organized around the original Project Dying Ember FAI source document.** Neuron Forge contains a from-scratch decoder-only Transformer, byte-level BPE tokenizer, training loop, checkpoint tools, a local conversation prototype, and a local Shakespeare text library.
 
 ## Hosted website
 
 Open **[Neuron Forge](https://neuron-forge-cyber-0ab0.vercel.app)**.
 
-The website does not call an external AI API. Its search index is built from the local files under `data/shakespeare/`. The current collection contains 37 plays, all 154 sonnets, and the associated poetry files present in the selected text edition. It returns relevant passages from those files instead of sampling random characters from an undertrained network.
+The chat endpoint does not call Vercel AI Gateway or any external language-model API. It uses the Python offline conversation runtime in `src/neuronforge_engine/offline_chat.py`. The current runtime supports basic conversation, in-session recall, safe arithmetic, source-grounded answers about the Dying Ember document, and local Shakespeare passage lookup.
 
-The website's corpus engine is a text retrieval system, not a fully trained general-purpose chatbot. It is deliberately described that way in the interface.
+**Important distinction:** this offline runtime is a working conversational prototype, not a trained general-purpose neural language model. It does not have broad world knowledge or reliable open-ended reasoning. The from-scratch Transformer implementation is separate and still needs a suitable training corpus, sufficient compute, training, and evaluation before it can replace the prototype.
+
+## FAI source document
+
+The exact recovered source document is preserved at:
+
+- `docs/FAI_SOURCE_DYING_EMBER.txt`
+
+That file is stored verbatim. Do not rewrite, paraphrase, normalize, or silently change its language. The four primary systems are the source-defined:
+
+- `PERSONALITY-AI`
+- `FEELINGS-AI`
+- `RULE-AI`
+- `TRAITS-AI`
+
+Together, the source identifies the final reconstruction as `FAI-AI`. The runtime treats the source's evidence-versus-assumption warning as a hard boundary. The document describes the mission and four systems; it is not itself the underlying archive of subject conversations. The runtime must not invent missing messages, memories, emotional states, or traits.
 
 ## What is included
 
+- Offline conversation endpoint with no remote model/API dependency.
+- FAI source document preserved verbatim.
+- Four explicit FAI-system boundaries in the offline runtime.
+- In-session conversation history handling.
+- Safe, constrained arithmetic parsing (no `eval`).
+- Local Shakespeare corpus retrieval as optional reference material.
 - Byte-level BPE tokenizer with a 256-byte base vocabulary and learned merges.
 - GPT-style causal Transformer with multi-head self-attention, MLP blocks, residual connections, and tied embeddings.
 - Training from random initialization using AdamW, warmup/cosine learning-rate scheduling, gradient accumulation, clipping, validation loss, and checkpoints.
-- Generation with temperature, top-k, top-p, and repetition penalty.
 - CLI for training, generation, terminal chat, and local serving.
-- An offline Shakespeare text collection, organized by play and poetry.
-- A local corpus preparation and passage-indexing pipeline for the hosted site.
 - Tests and GitHub Actions CI.
 
 ## Quick start
@@ -42,23 +60,9 @@ neuronforge train --config configs/quick.yaml
 neuronforge generate --checkpoint checkpoints/latest.pt --prompt "Hello"
 ```
 
-## Train on the bundled Shakespeare corpus
+The quick profile is only a pipeline smoke test. It will not produce a capable conversational model.
 
-The source files are stored separately under `data/shakespeare/plays/` and `data/shakespeare/poetry/`. Prepare the combined corpus with:
-
-```bash
-python scripts/prepare_data.py
-```
-
-The combined file is written to `data/processed/shakespeare_corpus.txt`. Review the model and training sizes in `configs/` for your hardware before starting a run.
-
-To rebuild the website's local search index:
-
-```bash
-python scripts/build_corpus_index.py
-```
-
-## Local browser chat
+## Run the local browser interface
 
 ```bash
 pip install -e ".[web]"
@@ -70,31 +74,25 @@ Open `http://127.0.0.1:8000`. The server binds to localhost by default. Do not e
 ## Repository structure
 
 ```text
-src/neuronforge/                  # original starter files supplied in the ZIP (kept unchanged)
-src/neuronforge_engine/           # GPT training and local corpus engine
-  config.py                       # validated model and training configuration
+src/neuronforge_engine/
+  offline_chat.py                 # local dialogue routing and FAI source boundaries
+  config.py                       # model and training configuration
   tokenizer.py                    # byte-level BPE
   data.py                         # corpus encoding and batch sampling
-  model.py                        # causal GPT-style Transformer
+  model.py                         # causal GPT-style Transformer
   training.py                     # optimization, evaluation and checkpointing
   generation.py                   # sampling and text generation
   checkpoint.py                   # checkpoint serialization and restore
   web_runtime.py                  # local Shakespeare passage search
   cli.py                           # train / generate / chat / serve commands
-api/                               # hosted web function
-scripts/                           # corpus preparation and local index generation
-data/shakespeare/plays/            # individual play texts
-data/shakespeare/poetry/           # sonnets and other poetry
-configs/                           # quick and base training profiles
+api/generate.py                    # hosted app's fully offline chat endpoint
+docs/FAI_SOURCE_DYING_EMBER.txt    # verbatim original source document
 tests/                             # unit tests
-docs/                              # architecture, training, data and roadmap notes
 public/                            # website UI, icon, styles, and browser script
 ```
 
-## Limitations
+## Current limitations
 
-The hosted passage engine returns material from the bundled collection; it does not create an original response to every possible question. The full Transformer code is a genuine training implementation, but a capable general-purpose model still requires much more training data, compute, evaluation, and safety work than this repository currently includes.
+The current website runtime is intentionally honest about its limits: it can handle common chat patterns and supported local tasks, but it is not yet a broad general-purpose AI. The GPT model is initialized from random weights and no trained conversational checkpoint is included. A capable from-scratch model requires a large, diverse, legally usable dataset, substantial accelerator compute, evaluation, and safety work.
 
-The collection is an edition of surviving and attributed works. Lost works cannot be reconstructed, and some collaborative or disputed attributions cannot be settled by a text corpus.
-
-See [docs/TRAINING_GUIDE.md](docs/TRAINING_GUIDE.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/DATA_AND_SAFETY.md](docs/DATA_AND_SAFETY.md).
+The Dying Ember source warns that messages may be incomplete, joking, false, exaggerated, or contradictory. Reconstruction claims must remain tied to actual evidence. The original document is preserved as-is; any future archive ingestion should add evidence without modifying that source.

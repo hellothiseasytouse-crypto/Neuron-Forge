@@ -158,6 +158,14 @@ class LocalConversationEngine:
         if not message:
             return "Send me a message and we can start."
 
+        if re.search(r"\bwho is fai\b|\bsubject identity\b", lowered):
+            return (
+                "The Dying Ember source labels FAI as the subject, but lists the "
+                "objective as unknown. It does not provide the subject's identity "
+                "or enough conversation evidence to describe who they are. It says "
+                "the reconstruction must be built from evidence, not assumption."
+            )
+
         if re.search(r"\b(?:what is|who is|tell me about|explain)\b.*\b(?:fai|dying ember)\b|\bfai-ai\b|\bthe four systems\b", lowered):
             return self.rules.evidence_answer()
 
@@ -207,14 +215,15 @@ class LocalConversationEngine:
         if re.search(r"\b(?:joke|make me laugh)\b", lowered):
             return "Why did the programmer quit their job? They didn't get arrays. 🙃"
 
-        math_match = re.search(
-            r"(?:what is|calculate|solve|compute)?\s*([-+]?\d+(?:\.\d+)?(?:\s*[+*/%()-]\s*[-+]?\d+(?:\.\d+)?)+)\s*[?!.]*$",
+        math_match = re.fullmatch(
+            r"\s*(?:(?:what is|calculate|solve|compute)\s+)?([0-9().+*/%\- ]+)\s*[?!.]*\s*",
             lowered,
         )
         if math_match:
-            result = _safe_math(math_match.group(1))
-            if result is not None:
-                return f"{math_match.group(1).strip()} = {result}"
+            expression = math_match.group(1).strip()
+            result = _safe_math(expression)
+            if result is not None and re.search(r"[+*/%]", expression):
+                return f"{expression} = {result}"
 
         if re.search(r"\b(?:fai|dying ember|subject|archive|personality-ai|feelings-ai|rule-ai|traits-ai)\b", lowered):
             return self.rules.evidence_answer() + "\n\n" + self.rules.missing_evidence_answer()

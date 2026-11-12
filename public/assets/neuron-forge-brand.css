@@ -1,0 +1,13 @@
+:root{--accent:#b79aff;--accent-deep:#9068ec;--violet:#c2adff}
+body{background:radial-gradient(ellipse at 63% -20%,#21163b 0,transparent 46%),var(--bg)}
+.brand-mark{width:42px;height:42px;border-radius:13px;background:#151027;border:1px solid #54418a;color:#d7c6ff;box-shadow:0 0 24px #8b63f02a,inset 0 1px #ffffff18}
+.brand-mark img{display:block;width:40px;height:40px;object-fit:contain}
+.brand-copy small{color:#a99bd6}
+.new-chat-button{border-color:#6951a0;background:linear-gradient(105deg,#d2c0ff,#a88aff);color:#1a142b;box-shadow:0 4px 20px #a88aff20}
+.new-chat-button kbd{color:#57457f;background:#e6dcff;border-color:#bda8ee}
+.nav-item.active{background:#2a2140;border-color:#4a3a72;color:#e4d8ff}
+.nav-active-dot{background:var(--accent)}
+.icon-button:hover{background:#241d38;border-color:#41335f;color:#f1eaff}
+.brand-mark svg{width:32px;height:32px}
+@media(max-width:760px){.brand-mark{width:42px;height:42px}.brand-mark img{width:40px;height:40px}}
+@media(min-width:761px){.sidebar-collapsed .brand-mark{width:30px;height:30px}.sidebar-collapsed .brand-mark img{width:28px;height:28px}}

@@ -10,7 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from neuronforge_engine.offline_chat import LocalConversationEngine  # noqa: E402
+from neuronforge_engine.offline_chat import FAI_SYSTEMS, LocalConversationEngine  # noqa: E402
 from neuronforge_engine.web_runtime import load_web_model  # noqa: E402
 
 SOURCE_DOCUMENT = ROOT / "docs" / "FAI_SOURCE_DYING_EMBER.txt"
@@ -104,7 +104,7 @@ class handler(BaseHTTPRequestHandler):
                 "ai_mode": "offline",
                 "external_ai_api": False,
                 "fai_source_loaded": bool(engine.source_text),
-                "fai_systems": ["PERSONALITY-AI", "FEELINGS-AI", "RULE-AI", "TRAITS-AI"],
+                "fai_systems": [name for name, _ in FAI_SYSTEMS],
             })
             send_json(self, 200, {"ok": True, **details})
         except Exception as exc:

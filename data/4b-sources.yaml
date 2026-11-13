@@ -1,0 +1,28 @@
+# 4B data sources. Only sources reviewed for the intended use should be enabled.
+tokenizer_vocab_size: 32768
+tokenizer_documents: 250000
+validation_percent: 5
+minimum_document_characters: 300
+sources:
+  - name: English Wikipedia
+    dataset_id: wikimedia/wikipedia
+    dataset_config: 20231101.en
+    split: train
+    text_field: text
+    title_field: title
+    url_field: url
+    enabled: true
+    license: CC BY-SA 3.0 and GNU Free Documentation License (GFDL)
+    attribution: Wikimedia Foundation, English Wikipedia dump subset 20231101.en; retain article title and source URL and review source terms before redistribution.
+    dataset_card: https://huggingface.co/datasets/wikimedia/wikipedia
+  - name: FineWeb-Edu (disabled pending legal, privacy and safety review)
+    dataset_id: HuggingFaceFW/fineweb-edu
+    dataset_config: default
+    split: train
+    text_field: text
+    title_field: ""
+    url_field: url
+    enabled: false
+    license: ODC-By 1.0 and Common Crawl terms
+    attribution: Preserve original source URLs; review dataset card, ODC-By attribution, Common Crawl terms, privacy and content filtering before enabling.
+    dataset_card: https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu

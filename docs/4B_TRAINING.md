@@ -42,3 +42,31 @@ The workflow can be dispatched manually once a matching self-hosted GPU runner i
 ## After pretraining
 
 A pretrained next-token model is not yet a polished assistant. Neuron Forge still needs instruction tuning, conversation tuning, held-out evaluation, safety testing, retrieval/tool integration, and an inference deployment that can serve its checkpoint. The 4B checkpoint must be evaluated before claiming assistant quality.
+
+
+## Dataset quality and instruction tuning
+
+The pretraining preparation script now normalizes whitespace and removes exact duplicate document bodies before assigning documents to train/validation. This prevents exact duplicate text from appearing in both splits. It is not semantic deduplication or a complete safety/legal review.
+
+Do not describe the current starter corpus as sufficient or fully reviewed. The enabled English Wikipedia source has attribution and share-alike obligations; check the source terms and preserve source metadata before distributing trained weights or derived datasets. FineWeb-Edu remains disabled pending its separate license, provenance, privacy and content review. The configured 20B-token minimum is a guard, not a claim that the current manifest supplies that many tokens.
+
+### Prepare instruction data
+
+Create a locally reviewed JSONL file with one conversation per line:
+
+\`\`\`json
+{"messages":[{"role":"user","content":"Explain photosynthesis simply."},{"role":"assistant","content":"Photosynthesis is the process..."}]}
+\`\`\`
+
+Then, after the 4B tokenizer and pretrained checkpoint exist:
+
+\`\`\`bash
+python scripts/prepare_4b_sft.py --input data/reviewed-conversations.jsonl --tokenizer data/4b/tokenizer.json --output-dir data/4b-sft
+torchrun --standalone --nnodes=1 --nproc_per_node=8 scripts/instruction_tune_4b_fsdp.py --config configs/4b-sft.yaml --data-dir data/4b-sft --pretrained-checkpoint checkpoints/neuron-forge-4b --checkpoint-dir checkpoints/neuron-forge-4b-sft
+\`\`\`
+
+The SFT data builder removes exact duplicate conversations, creates a deterministic held-out split, and masks user/system tokens so only assistant response tokens contribute to supervised loss. It does not itself certify the source data; the owner must review and document the source license, provenance, privacy and quality.
+
+Both training stages append training/validation measurements to \`metrics.jsonl\` and save resumable distributed checkpoints. The instruction-tuning workflow is manual and also requires the same self-hosted multi-GPU runner plus persistent access to the pretrained checkpoint and prepared SFT shards.
+
+**Testing milestone:** after SFT produces \`checkpoints/neuron-forge-4b-sft/latest.json\`, export/load the checkpoint into an inference runtime and run a held-out conversational evaluation suite. A falling validation loss alone is not proof of a reliable assistant. The current repository does not yet contain a production-ready 4B chat-serving endpoint or a completed evaluation scorecard.

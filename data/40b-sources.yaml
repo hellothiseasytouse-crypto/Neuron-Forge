@@ -17,3 +17,15 @@ sources:
     license: CC BY-SA 3.0 and GNU Free Documentation License (GFDL)
     attribution: Wikimedia Foundation, English Wikipedia dump subset 20231101.en. Preserve article title and source URL attribution; review and comply with the dataset and source licenses before redistributing trained weights or outputs.
     dataset_card: https://huggingface.co/datasets/wikimedia/wikipedia
+
+  - name: FineWeb-Edu (opt-in; license and content review required)
+    dataset_id: HuggingFaceFW/fineweb-edu
+    dataset_config: default
+    split: train
+    text_field: text
+    title_field: ""
+    url_field: url
+    enabled: false
+    license: Open Data Commons Attribution License (ODC-By) v1.0; also subject to Common Crawl Terms of Use
+    attribution: Hugging Face FineWeb-Edu dataset, with original Common Crawl source URLs retained. Review ODC-By attribution requirements and Common Crawl terms; run deduplication, privacy review, and content-safety filtering before enabling.
+    dataset_card: https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu

@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from neuronforge_engine.offline_chat import FAI_SYSTEMS, LocalConversationEngine  # noqa: E402
-from neuronforge_engine.memory import normalize_memory_entries  # noqa: E402
+from neuronforge_engine.memory import normalize_memory_entries, select_relevant_memories  # noqa: E402
 from neuronforge_engine.web_runtime import load_web_model  # noqa: E402
 from neuronforge_engine.numpy_inference import NumpyNeuronForge  # noqa: E402
 
@@ -189,8 +189,16 @@ class handler(BaseHTTPRequestHandler):
                 neural = get_neural_model()
                 if neural is not None:
                     try:
-                        generated = neural.generate(latest_user[:700], max_new_tokens=48)
-                        completion = generated[len(latest_user[:700]):].strip() if generated.startswith(latest_user[:700]) else generated.strip()
+                        prompt_parts = []
+                        for memory in select_relevant_memories(latest_user, memories, limit=2):
+                            role = "USER" if memory["role"] == "user" else "NEURON FORGE"
+                            prompt_parts.append(f"EARLIER {role}: {memory['content'][:180]}")
+                        for item in messages[-6:]:
+                            role = "USER" if item["role"] == "user" else "NEURON FORGE"
+                            prompt_parts.append(f"{role}: {item['content'][:240]}")
+                        neural_prompt = "\\n".join(prompt_parts) + "\\nNEURON FORGE:"
+                        generated = neural.generate(neural_prompt, max_new_tokens=48)
+                        completion = generated[len(neural_prompt):].strip() if generated.startswith(neural_prompt) else generated.strip()
                         if completion:
                             answer = completion
                             used_neural = True

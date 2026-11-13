@@ -1,0 +1,52 @@
+name: Add trained Neuron Forge model to repository
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/add-trained-model-to-repo.yml"
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  commit-model:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download completed training artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: neuron-forge-continued-trained-model
+          repository: hellothiseasytouse-crypto/Neuron-Forge
+          run-id: 43425646511
+          github-token: ${{ github.token }}
+          path: trained-artifact
+
+      - name: Verify checkpoints and install them in the repository
+        run: |
+          test -s trained-artifact/checkpoints/best.pt
+          test -s trained-artifact/checkpoints/latest.pt
+          test -s trained-artifact/training-report.json
+          mkdir -p models/neuron-forge-v1
+          cp trained-artifact/checkpoints/best.pt models/neuron-forge-v1/best.pt
+          cp trained-artifact/checkpoints/latest.pt models/neuron-forge-v1/latest.pt
+          cp trained-artifact/training-report.json models/neuron-forge-v1/training-report.json
+          cp trained-artifact/sample.txt models/neuron-forge-v1/sample.txt
+          cp trained-artifact/continued-training.log models/neuron-forge-v1/training.log
+          cp trained-artifact/data/processed/manifest.json models/neuron-forge-v1/corpus-manifest.json
+          ls -lh models/neuron-forge-v1
+
+      - name: Commit model files to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add models/neuron-forge-v1
+          git commit -m "Add trained Neuron Forge v1 checkpoints"
+          git push origin HEAD:main

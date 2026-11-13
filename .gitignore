@@ -15,3 +15,6 @@ data/processed/*
 .mypy_cache/
 .ruff_cache/
 *.log
+
+# Large 40B dataset artifacts are generated locally and must not be committed.
+data/40b/

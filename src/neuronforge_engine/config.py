@@ -62,6 +62,7 @@ class TrainConfig:
     data_path: str = "data/processed/shakespeare_corpus.txt"
     batch_size: int = 16
     max_steps: int = 5_000
+    target_tokens: int = 0
     learning_rate: float = 3e-4
     min_learning_rate: float = 3e-5
     warmup_steps: int = 100
@@ -78,6 +79,8 @@ class TrainConfig:
     def validate(self) -> None:
         if self.batch_size < 1 or self.max_steps < 1:
             raise ValueError("batch_size and max_steps must be positive")
+        if self.target_tokens < 0:
+            raise ValueError("target_tokens must be zero (disabled) or positive")
         if self.learning_rate <= 0 or self.min_learning_rate < 0:
             raise ValueError("learning rates must be positive (minimum may be zero)")
         if self.warmup_steps < 0 or self.eval_interval < 1 or self.eval_batches < 1:

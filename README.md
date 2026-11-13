@@ -34,9 +34,9 @@ Open the [Neuron Forge 250M Google Colab notebook](https://colab.research.google
 
 Colab controls free GPU availability and session duration; neither is guaranteed. The 100,000-step target may require many sessions. Training is not considered complete until a checkpoint report records the final step and validation metrics. The live website does not load this model automatically.
 
-## 40B-class architecture blueprint
+## 40B-class model and training project
 
-Neuron Forge now includes a **40,000,905,216-parameter** architecture definition in [`configs/40b.yaml`](configs/40b.yaml) and [`configs/40b-architecture.json`](configs/40b-architecture.json).
+Neuron Forge includes a **40,000,905,216-parameter** decoder-only Transformer in [`configs/40b.yaml`](configs/40b.yaml). Its training system is separate from the 250M experiment.
 
 | Setting | Value |
 | --- | ---: |
@@ -50,15 +50,11 @@ Neuron Forge now includes a **40,000,905,216-parameter** architecture definition
 | Normalization | RMSNorm |
 | Feed-forward | SwiGLU |
 
-**Status: architecture added; no 40B weights have been created or trained.** This is not a one-click upgrade to the 250M run. BF16 weights alone are about 74.5 GiB (before KV cache and runtime memory); full training requires a distributed multi-GPU setup, sharded optimizer/checkpoints, a distributed training implementation, and a much larger curated dataset. The existing Colab T4 notebook and current single-process training loop cannot train this model. The 40B config is kept separate so it does not accidentally replace or break the 250M experiment.
+The repository now includes a streaming dataset preparation pipeline, a tokenizer trained from the selected corpus, a BF16 PyTorch FSDP multi-GPU trainer, sharded model/optimizer checkpoints, a resumable manual GitHub Actions workflow, and a 40B training guide in [`docs/40B_TRAINING.md`](docs/40B_TRAINING.md).
 
-Load and count the blueprint without allocating model weights:
+**Training status: not started.** The data pipeline and trainer are code in GitHub; there is no trained 40B checkpoint yet. The current ChatGPT execution environment has CPU-only PyTorch and no CUDA devices, and GitHub's ordinary CI runners are CPU-only. The 40B workflow requires a separate self-hosted runner labelled `gpu` and `multi-gpu` with at least 16 visible BF16-capable GPUs. I have not launched a training run or claimed that weights exist.
 
-```python
-from neuronforge_engine.config import load_config
-cfg = load_config("configs/40b.yaml")
-print(f"{cfg.model.parameter_count():,} parameters")
-```
+The starter data manifest enables English Wikipedia and records attribution. It is not a complete general-purpose training corpus. The planned pretraining target is 800 billion tokens; more diverse, deduplicated and license-reviewed sources are needed to approach that target without excessive repetition. Large datasets and checkpoints stay on persistent training storage, not GitHub's source tree.
 
 ## Other experiments
 

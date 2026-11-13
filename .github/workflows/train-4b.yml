@@ -1,0 +1,79 @@
+name: Train Neuron Forge 4B
+on:
+  workflow_dispatch:
+    inputs:
+      max_steps:
+        description: "Optional short infrastructure test; leave empty for full configured run"
+        required: false
+        default: "2"
+permissions:
+  contents: read
+concurrency:
+  group: neuron-forge-4b-training
+  cancel-in-progress: false
+jobs:
+  train:
+    name: Distributed 4B pretraining (self-hosted GPU runner)
+    runs-on: [self-hosted, linux, x64, gpu, multi-gpu]
+    timeout-minutes: 8640
+    env:
+      TOKENIZERS_PARALLELISM: "false"
+      OMP_NUM_THREADS: "8"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify CUDA hardware
+        run: |
+          nvidia-smi
+          python - <<'PY'
+          import torch
+          count = torch.cuda.device_count()
+          print("PyTorch:", torch.__version__, "CUDA:", torch.version.cuda, "GPUs:", count)
+          if not torch.cuda.is_available() or count < 8:
+              raise SystemExit("4B FSDP training needs at least 8 visible CUDA GPUs.")
+          for i in range(count):
+              p = torch.cuda.get_device_properties(i)
+              print(f"GPU {i}: {p.name}, {p.total_memory / 1024**3:.1f} GiB, BF16={torch.cuda.is_bf16_supported()}")
+          if not torch.cuda.is_bf16_supported():
+              raise SystemExit("BF16-capable GPUs are required.")
+          PY
+      - name: Install project and data dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . --no-deps
+          python -m pip install "datasets>=3.0" "tokenizers>=0.21,<1" "pyyaml>=6.0" "numpy>=1.26,<3"
+      - name: Prepare data if not already on persistent runner storage
+        run: |
+          if [ ! -s data/4b/train.bin ] || [ ! -s data/4b/validation.bin ] || [ ! -s data/4b/tokenizer.json ]; then
+            python scripts/prepare_40b_data.py --config data/4b-sources.yaml --output-dir data/4b
+          fi
+      - name: Verify parameter count and dataset
+        env:
+          MAX_STEPS: ${{ inputs.max_steps }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from neuronforge_engine.config import load_config
+          cfg = load_config("configs/4b.yaml")
+          count = cfg.model.parameter_count()
+          print(f"Exact parameter count: {count:,}")
+          assert count == 4_064_498_688
+          manifest = json.loads(Path("data/4b/dataset-manifest.json").read_text())
+          print("Prepared tokens:", manifest["train_tokens"])
+          if manifest["train_tokens"] < cfg.train.minimum_data_tokens and not os.environ.get("MAX_STEPS"):
+              raise SystemExit("Full pretraining blocked: prepare at least 20B reviewed training tokens.")
+          PY
+      - name: Train from random initialization
+        env:
+          MAX_STEPS: ${{ inputs.max_steps }}
+        run: |
+          set -o pipefail
+          N=$(python -c "import torch; print(torch.cuda.device_count())")
+          ARGS=(--config configs/4b.yaml --data-dir data/4b --checkpoint-dir checkpoints/neuron-forge-4b)
+          if [ -n "$MAX_STEPS" ]; then ARGS+=(--max-steps "$MAX_STEPS" --allow-small-corpus); fi
+          mkdir -p checkpoints/neuron-forge-4b
+          torchrun --standalone --nnodes=1 --nproc_per_node="$N" scripts/train_4b_fsdp.py "${ARGS[@]}" 2>&1 | tee checkpoints/neuron-forge-4b/training.log
+      - name: Report checkpoint
+        if: always()
+        run: |
+          if [ -f checkpoints/neuron-forge-4b/latest.json ]; then cat checkpoints/neuron-forge-4b/latest.json; else echo "No checkpoint produced; inspect training.log."; fi

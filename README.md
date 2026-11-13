@@ -93,7 +93,11 @@ tests/                             # unit tests
 public/                            # website UI, icon, styles, and browser script
 ```
 
-## Trained checkpoint\n\nThe first from-scratch training and continuation runs are recorded in [`docs/TRAINING_RESULTS_2026-11-13.md`](docs/TRAINING_RESULTS_2026-11-13.md). The downloadable checkpoint and sample are attached to the [continued training run](https://github.com/hellothiseasytouse-crypto/Neuron-Forge/actions/runs/43425646511).\n\n## Current limitations
+## Trained checkpoint
+
+The first from-scratch training and continuation runs are recorded in [`docs/TRAINING_RESULTS_2026-11-13.md`](docs/TRAINING_RESULTS_2026-11-13.md). The downloadable checkpoint and sample are attached to the [continued training run](https://github.com/hellothiseasytouse-crypto/Neuron-Forge/actions/runs/43425646511).
+
+## Current limitations
 
 The hosted chat runtime is still deterministic and limited; the upgraded Transformer is not wired into the hosted endpoint because there is no trained checkpoint and the hosted Python function intentionally does not bundle PyTorch. Training starts from random weights. The bundled Shakespeare corpus and short FAI source document are useful for pipeline testing and source familiarity, not enough to produce a capable general-purpose assistant. A strong from-scratch model requires a much larger, diverse, legally usable corpus, substantial accelerator compute, instruction training, robust evaluation, and safety work. Browser memory is stored locally, but selected excerpts are sent to the project's own endpoint when a response is requested; it is not synced across devices.
 

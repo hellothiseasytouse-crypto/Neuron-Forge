@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
     inputs:
       max_steps:
-        description: "Optional short infrastructure test; leave empty for full configured run"
+        description: "Optional short infrastructure test; leave empty for the full configured run"
         required: false
-        default: "2"
+        default: ""
 permissions:
   contents: read
 concurrency:

@@ -14,7 +14,7 @@ def test_sft_config_matches_pretraining_architecture():
 
 def test_sft_policy_requires_reviewed_local_data():
     policy=yaml.safe_load((ROOT/"data"/"4b-sft-sources.yaml").read_text(encoding="utf-8"))
-    assert "reviewed local JSONL" in policy["starter_policy"]
+    assert "locally reviewed JSONL" in policy["starter_policy"]
 
 def test_sft_scripts_compile():
     for name in ("scripts/prepare_4b_sft.py","scripts/instruction_tune_4b_fsdp.py"):

@@ -348,10 +348,11 @@
       if (!response.ok || !data.ok) throw new Error(data.error || "Library unavailable");
       catalog = Array.isArray(data.works_catalog) ? data.works_catalog : [];
       const assistantReady = Boolean(data.assistant_ready);
-      $("#top-status").textContent = assistantReady ? "Neuron Forge · Local AI" : "Local assistant unavailable";
-      $("#sidebar-status").textContent = assistantReady ? "Local assistant ready" : "Local assistant unavailable";
+      const modelTarget = data.model_target || {};
+      $("#top-status").textContent = assistantReady ? "Neuron Forge · 250M target" : "Local assistant unavailable";
+      $("#sidebar-status").textContent = assistantReady ? "250M model configured" : "Local assistant unavailable";
       $("#sidebar-status-detail").textContent = assistantReady
-        ? "browser chat context · arithmetic · reference search"
+        ? formatNumber(modelTarget.parameters) + " parameters · GPU training not started"
         : "The local conversation service could not be reached";
       $("#status-pip").classList.toggle("ready", Boolean(data.assistant_ready));
       $("#stat-works").textContent = formatNumber(catalog.length);

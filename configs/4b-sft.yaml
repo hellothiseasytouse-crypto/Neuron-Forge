@@ -1,0 +1,30 @@
+# Supervised instruction tuning after 4B pretraining.
+model:
+  vocab_size: 32768
+  block_size: 2048
+  n_layer: 35
+  n_head: 24
+  n_embd: 3072
+  dropout: 0.0
+tokenizer:
+  vocab_size: 32768
+  min_frequency: 2
+  max_train_chars: 1000000000
+train:
+  data_path: data/4b-sft
+  batch_size: 1
+  max_steps: 10000
+  target_tokens: 0
+  minimum_data_tokens: 0
+  learning_rate: 0.00002
+  min_learning_rate: 0.000002
+  warmup_steps: 200
+  eval_interval: 250
+  eval_batches: 20
+  weight_decay: 0.01
+  grad_clip: 1.0
+  gradient_accumulation_steps: 16
+  gradient_checkpointing: true
+  checkpoint_path: checkpoints/neuron-forge-4b-sft/latest
+  seed: 20261114
+  device: cuda

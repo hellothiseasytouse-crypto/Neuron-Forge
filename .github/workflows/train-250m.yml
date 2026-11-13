@@ -95,8 +95,10 @@ jobs:
           cfg = load_config("configs/250m.yaml")
           best = read_checkpoint("checkpoints/neuron-forge-250m/best.pt", device="cpu")
           latest = read_checkpoint("checkpoints/neuron-forge-250m/latest.pt", device="cpu")
-          actual = cfg.model.parameter_count()
           model_cfg = best["model_config"]
+          from neuronforge_engine.config import ModelConfig
+          actual = ModelConfig(**model_cfg).parameter_count()
+          assert actual == 248_144_832, f"Checkpoint has {actual:,} parameters, not 248,144,832"
           train_cfg = cfg.train
           assert actual == 248_144_832
           assert model_cfg["n_layer"] == cfg.model.n_layer == 29

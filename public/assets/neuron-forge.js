@@ -15,7 +15,7 @@
   let sending = false;
 
   const STORAGE_KEY = "neuronforge.workspace.v2";
-  const MAX_SAVED_CHATS = 20;
+  const MAX_SAVED_CHATS = 12;
   let workspace = loadWorkspace();
 
   function loadWorkspace() {
@@ -71,9 +71,9 @@
   function persistCurrentChat() {
     let chat = activeChat();
     if (!chat) chat = createChat();
-    chat.messages = conversationHistory.slice(-60).map((item) => ({
+    chat.messages = conversationHistory.slice(-40).map((item) => ({
       role: item.role,
-      content: String(item.content || "").slice(0, 4000)
+      content: String(item.content || "").slice(0, 1800)
     }));
     const firstUser = chat.messages.find((item) => item.role === "user");
     if (firstUser) {
@@ -117,7 +117,7 @@
     const chat = workspace.chats.find((item) => item.id === chatId);
     if (!chat) return;
     workspace.activeChatId = chatId;
-    conversationHistory = chat.messages.map((item) => ({ role: item.role, content: item.content }));
+    conversationHistory = chat.messages.filter((item) => item && ["user", "assistant"].includes(item.role) && typeof item.content === "string").map((item) => ({ role: item.role, content: item.content }));
     messages.innerHTML = "";
     if (!conversationHistory.length) {
       messages.innerHTML = welcomeMarkup;
@@ -141,15 +141,15 @@
           if (!item || !["user", "assistant"].includes(item.role) || typeof item.content !== "string") return;
           const content = item.content.trim();
           if (!content || secretPattern.test(content)) return;
-          records.push({ role: item.role, content: content.slice(0, 1200) });
+          records.push({ role: item.role, content: content.slice(0, 700) });
         });
       });
-    return records.slice(-40);
+    return records.slice(-20);
   }
 
   function restoreWorkspace() {
     const chat = activeChat() || createChat();
-    conversationHistory = (chat.messages || []).map((item) => ({ role: item.role, content: item.content }));
+    conversationHistory = (chat.messages || []).filter((item) => item && ["user", "assistant"].includes(item.role) && typeof item.content === "string").map((item) => ({ role: item.role, content: item.content }));
     if (conversationHistory.length) {
       messages.innerHTML = "";
       conversationHistory.forEach((item) => addMessage(item.content, item.role));
@@ -245,7 +245,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt,
-          messages: conversationHistory.slice(-24),
+          messages: conversationHistory.slice(-18).map((item) => ({ role: item.role, content: item.content.slice(0, 1500) })),
           memories: buildMemoryContext()
         }),
         cache: "no-store"

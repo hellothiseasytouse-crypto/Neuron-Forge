@@ -1,0 +1,131 @@
+name: Train Neuron Forge From Scratch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/train-model.yml"
+      - "configs/first-train.yaml"
+      - "data/shakespeare/**"
+      - "docs/FAI_SOURCE_DYING_EMBER.txt"
+      - "src/neuronforge_engine/**"
+      - "scripts/prepare_data.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neuron-forge-initial-training
+  cancel-in-progress: false
+
+jobs:
+  train:
+    name: Train CPU language model
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OMP_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+      TOKENIZERS_PARALLELISM: "false"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install CPU-only PyTorch and project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install PyYAML pytest
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e . --no-deps
+
+      - name: Verify code and architecture tests
+        run: pytest -q
+
+      - name: Prepare the training corpus
+        run: python scripts/prepare_data.py
+
+      - name: Train the model from random initialization
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p checkpoints
+          neuronforge train --config configs/first-train.yaml 2>&1 | tee training.log
+
+      - name: Generate a sample from the trained checkpoint
+        run: |
+          neuronforge generate \
+            --checkpoint checkpoints/best.pt \
+            --prompt "To be, or not to be:" \
+            --max-new-tokens 120 \
+            --temperature 0.8 \
+            --top-k 40 \
+            --top-p 0.95 \
+            --device cpu > sample.txt
+          cat sample.txt
+
+      - name: Write training report
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+          from neuronforge_engine.checkpoint import read_checkpoint
+          from neuronforge_engine.config import ModelConfig
+          from neuronforge_engine.model import GPT
+
+          checkpoint = read_checkpoint("checkpoints/best.pt", device="cpu")
+          model_config = ModelConfig(**checkpoint["model_config"])
+          model = GPT(model_config)
+          model.load_state_dict(checkpoint["model_state"])
+          log = Path("training.log").read_text(encoding="utf-8")
+          precision = re.search(r"precision: ([^\s]+)", log)
+          manifest = json.loads(Path("data/processed/manifest.json").read_text(encoding="utf-8"))
+          report = {
+              "status": "trained",
+              "training_method": "random initialization; no pretrained weights or remote AI API",
+              "architecture": "decoder-only Transformer: RoPE, RMSNorm, SwiGLU, causal scaled dot-product attention",
+              "checkpoint_format": checkpoint["format_version"],
+              "training_steps": checkpoint["step"],
+              "best_validation_loss": checkpoint["best_val_loss"],
+              "parameters": model.num_parameters(),
+              "vocabulary_size": model_config.vocab_size,
+              "context_length": model_config.block_size,
+              "layers": model_config.n_layer,
+              "heads": model_config.n_head,
+              "embedding_width": model_config.n_embd,
+              "precision": precision.group(1) if precision else "see training log",
+              "corpus_words": manifest["word_count"],
+              "corpus_files": manifest["file_count"],
+              "checkpoint": "checkpoints/best.pt",
+              "sample": "sample.txt",
+              "limitations": [
+                  "This is a small Shakespeare-heavy base language model, not a general-purpose assistant.",
+                  "The Dying Ember source is a short project specification, not the missing FAI conversation archive.",
+                  "Do not claim the checkpoint has reconstructed FAI or learned FAI's personality."
+              ]
+          }
+          Path("training-report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+          print(json.dumps(report, indent=2))
+          PY
+
+      - name: Upload trained checkpoints and metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: neuron-forge-first-trained-model
+          path: |
+            checkpoints/best.pt
+            checkpoints/latest.pt
+            training.log
+            training-report.json
+            sample.txt
+            data/processed/manifest.json
+          if-no-files-found: error
+          retention-days: 30

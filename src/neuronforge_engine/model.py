@@ -47,7 +47,6 @@ class CausalSelfAttention(nn.Module):
     def _rotary_values(self, length: int, device: torch.device, dtype: torch.dtype):
         positions = torch.arange(length, device=device, dtype=self.inv_freq.dtype)
         frequencies = torch.outer(positions, self.inv_freq.to(device=device))
-        angles = torch.cat((frequencies, frequencies), dim=-1)
         # Interleave frequencies to match the even/odd channel rotation.
         angles = torch.repeat_interleave(frequencies, 2, dim=-1)
         return angles.cos().to(dtype=dtype)[None, None], angles.sin().to(dtype=dtype)[None, None]

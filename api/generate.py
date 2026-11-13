@@ -105,7 +105,7 @@ class handler(BaseHTTPRequestHandler):
                 "conversation_memory": "browser-local; selected excerpts are sent only with chat requests",
                 "model_target": {
                     "name": "Neuron Forge 250M",
-                    "parameters": 249970240,
+                    "parameters": 248144832,
                     "status": "architecture-configured; training not started",
                     "trained": False,
                     "chat_enabled": False,

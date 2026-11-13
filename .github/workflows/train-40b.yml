@@ -86,12 +86,13 @@ jobs:
         shell: bash
         env:
           MAX_STEPS: ${{ inputs.max_steps }}
+          SMOKE_TEST: ${{ inputs.max_steps }}
         run: |
           set -o pipefail
           GPU_COUNT=$(python -c "import torch; print(torch.cuda.device_count())")
           ARGS=(--config configs/40b.yaml --data-dir data/40b --checkpoint-dir checkpoints/neuron-forge-40b)
           if [ -n "$MAX_STEPS" ]; then
-            ARGS+=(--max-steps "$MAX_STEPS")
+            ARGS+=(--max-steps "$MAX_STEPS" --allow-small-corpus)
           fi
           mkdir -p checkpoints/neuron-forge-40b
           torchrun --standalone --nnodes=1 --nproc_per_node="$GPU_COUNT" scripts/train_40b_fsdp.py "${ARGS[@]}" 2>&1 | tee checkpoints/neuron-forge-40b/training.log

@@ -18,7 +18,7 @@ The starter source is the English Wikipedia dump subset `20231101.en` through `w
 
 Before enabling another source, check its dataset card, upstream terms, and whether the intended model training and weight distribution are allowed. FineWeb-Edu is deliberately disabled by default because it is Common-Crawl-derived and its card notes that some harmful or biased web content may remain. Add a new entry to `data/40b-sources.yaml` with dataset ID, configuration, text field, declared license, attribution, and dataset card URL. Only enable material that has been reviewed. Do not put private chats, passwords, personal records, or copyrighted books/music into the corpus without the right to use them.
 
-A 40B model needs a large, diverse, deduplicated, quality-filtered corpus. The configured target is 800 billion tokens as an initial compute/data planning target, not a guarantee of quality. Training repeatedly on a much smaller corpus can overfit badly. Source curation, deduplication, safety filtering, evaluation data, and instruction-tuning data are still required.
+A 40B model needs a large, diverse, deduplicated, quality-filtered corpus. The configured target is 800 billion training tokens, and full runs require at least 400 billion prepared training tokens so they do not cycle endlessly over a tiny starter dataset. Training repeatedly on a much smaller corpus can overfit badly. The trainer enforces this minimum by default; `--allow-small-corpus` is only for short infrastructure smoke tests and prints a warning. Source curation, deduplication, safety filtering, evaluation data, and instruction-tuning data are still required.
 
 ## Hardware reality
 

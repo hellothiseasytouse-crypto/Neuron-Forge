@@ -63,6 +63,7 @@ class TrainConfig:
     batch_size: int = 16
     max_steps: int = 5_000
     target_tokens: int = 0
+    minimum_data_tokens: int = 0
     learning_rate: float = 3e-4
     min_learning_rate: float = 3e-5
     warmup_steps: int = 100
@@ -81,6 +82,8 @@ class TrainConfig:
             raise ValueError("batch_size and max_steps must be positive")
         if self.target_tokens < 0:
             raise ValueError("target_tokens must be zero (disabled) or positive")
+        if self.minimum_data_tokens < 0:
+            raise ValueError("minimum_data_tokens must be zero or positive")
         if self.learning_rate <= 0 or self.min_learning_rate < 0:
             raise ValueError("learning rates must be positive (minimum may be zero)")
         if self.warmup_steps < 0 or self.eval_interval < 1 or self.eval_batches < 1:

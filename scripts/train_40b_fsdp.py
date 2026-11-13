@@ -194,6 +194,7 @@ def main() -> None:
     parser.add_argument("--checkpoint-dir", type=Path, default=Path("checkpoints/neuron-forge-40b"))
     parser.add_argument("--max-steps", type=int, default=0, help="Optional short-run override; 0 uses target_tokens.")
     parser.add_argument("--no-resume", action="store_true")
+    parser.add_argument("--allow-small-corpus", action="store_true", help="Allow an intentionally tiny corpus for a short infrastructure smoke test only.")
     args = parser.parse_args()
 
     if "LOCAL_RANK" not in os.environ:
@@ -228,6 +229,16 @@ def main() -> None:
         validation_data = np.memmap(validation_path, mode="r", dtype=np.uint16)
         if min(len(train_data), len(validation_data)) <= config.model.block_size + 1:
             raise ValueError("Prepared token shards are too small for the configured context length.")
+        required_tokens = int(config.train.minimum_data_tokens)
+        if len(train_data) < required_tokens and not args.allow_small_corpus:
+            raise RuntimeError(
+                f"Refusing full 40B pretraining: corpus has {len(train_data):,} training tokens, "
+                f"but this run requires at least {required_tokens:,}. The starter Wikipedia subset is not enough. "
+                "Enable additional license-reviewed data sources and prepare a larger, filtered corpus. "
+                "For an explicitly limited infrastructure test only, pass --allow-small-corpus."
+            )
+        if len(train_data) < required_tokens and rank == 0:
+            print("WARNING: small-corpus override enabled; this run is only an infrastructure smoke test, not useful 40B pretraining.", flush=True)
 
         tokens_per_step = (
             config.train.batch_size

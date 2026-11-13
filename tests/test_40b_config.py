@@ -15,6 +15,7 @@ def test_40b_config_has_exact_parameter_count_and_training_target():
     assert config.model.block_size == 2048
     assert config.tokenizer.vocab_size == 65536
     assert config.train.target_tokens == 800_000_000_000
+    assert config.train.minimum_data_tokens == 400_000_000_000
     assert config.train.gradient_checkpointing is True
 
 

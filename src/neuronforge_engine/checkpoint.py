@@ -15,7 +15,7 @@ def save_checkpoint(path: str | Path, model: GPT, tokenizer: ByteBPETokenizer,
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     payload = {
-        "format_version": 2,
+        "format_version": 3,
         "model_config": config["model"],
         "training_config": config["train"],
         "tokenizer": tokenizer.to_state_dict(),
@@ -41,8 +41,8 @@ def read_checkpoint(path: str | Path, device: torch.device | str = "cpu") -> dic
 
 def load_model(path: str | Path, device: torch.device | str = "cpu"):
     checkpoint = read_checkpoint(path, device=device)
-    if checkpoint.get("format_version") != 2:
-        raise ValueError("This checkpoint uses the previous Transformer architecture; retrain with the current Neuron Forge model.")
+    if checkpoint.get("format_version") not in {2, 3}:
+        raise ValueError("Unsupported checkpoint format; retrain with the current Neuron Forge engine.")
     model_cfg = ModelConfig(**checkpoint["model_config"])
     tokenizer = ByteBPETokenizer.from_state_dict(checkpoint["tokenizer"])
     if tokenizer.vocab_size != model_cfg.vocab_size:

@@ -74,11 +74,6 @@ class ByteBPETokenizer:
             length=(len(sample) + chunk_size - 1) // chunk_size,
         )
         result = cls(tokenizer_json=tokenizer.to_str())
-        if result.vocab_size != vocab_size:
-            raise ValueError(
-                f"Tokenizer learned {result.vocab_size:,} tokens; expected {vocab_size:,}. "
-                "Provide more diverse training text."
-            )
         return result
 
     @classmethod

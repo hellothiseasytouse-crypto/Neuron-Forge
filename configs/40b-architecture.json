@@ -1,0 +1,29 @@
+{
+  "name": "Neuron Forge 40B-class",
+  "status": "architecture-blueprint-only",
+  "trained_checkpoint": false,
+  "parameters": 40000905216,
+  "approximate_parameters_billions": 40.000905,
+  "architecture": {
+    "family": "decoder-only Transformer",
+    "layers": 49,
+    "attention_heads": 64,
+    "embedding_width": 8192,
+    "head_dimension": 128,
+    "context_length": 2048,
+    "vocabulary_size": 65536,
+    "tied_token_embeddings": true,
+    "position_encoding": "RoPE",
+    "normalization": "RMSNorm",
+    "feed_forward": "SwiGLU"
+  },
+  "initialization": "random",
+  "inference_requirements": {
+    "bf16_weights_gib": 74.5,
+    "note": "Weights alone require roughly this much memory; runtime cache and activations need additional memory."
+  },
+  "training_requirements": {
+    "distributed_training_required": true,
+    "note": "The current single-process training loop and free Colab T4 notebook are not suitable. A distributed tensor/pipeline-parallel training implementation, multi-GPU cluster, large curated dataset, and sharded optimizer/checkpoint support are required."
+  }
+}

@@ -106,7 +106,8 @@ def stream_sources(config: dict, raw_path: Path, max_documents: int) -> tuple[in
                 "attribution": source.get("attribution", ""),
                 "dataset_card": source.get("dataset_card", ""),
                 "accepted_documents": accepted,
-                "skipped_documents": skipped,\n                "deduplication": "exact normalized text SHA-256",
+                "skipped_documents": skipped,
+                "deduplication": "exact normalized text SHA-256",
             })
             if max_documents and document_count >= max_documents:
                 break

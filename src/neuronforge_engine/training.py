@@ -72,8 +72,8 @@ def train(config: Config, resume: bool = False) -> Path:
         torch.cuda.manual_seed_all(config.train.seed)
     device = choose_device(config.train.device)
     use_amp = device.type == "cuda"
-    amp_dtype = torch.bfloat16 if use_amp and torch.cuda.is_bf16_supported() else torch.float16
-    scaler = torch.amp.GradScaler("cuda", enabled=use_amp and amp_dtype == torch.float16)
+    amp_dtype = torch.bfloat16 if use_amp and getattr(torch.cuda, "is_bf16_supported", lambda: False)() else torch.float16
+    scaler = torch.cuda.amp.GradScaler(enabled=use_amp and amp_dtype == torch.float16)
     precision_label = "bfloat16" if use_amp and amp_dtype == torch.bfloat16 else ("float16" if use_amp else "float32")
     print(f"Neuron Forge training device: {device} | precision: {precision_label}")
 

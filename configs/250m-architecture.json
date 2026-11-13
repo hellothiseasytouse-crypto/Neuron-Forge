@@ -1,12 +1,12 @@
 {
   "model_name": "Neuron Forge 250M",
   "status": "architecture_configured_training_not_started",
-  "parameters": 249970240,
+  "parameters": 248144832,
   "parameter_target": "approximately 250 million trainable parameters",
   "model": {
-    "vocab_size": 384,
+    "vocab_size": 8192,
     "block_size": 1024,
-    "n_layer": 30,
+    "n_layer": 29,
     "n_head": 16,
     "n_embd": 832,
     "dropout": 0.05
@@ -14,7 +14,7 @@
   "derived": {
     "feed_forward_hidden_width": 2224,
     "attention_head_width": 52,
-    "embedding_weights": 319488,
+    "embedding_weights": 6815744,
     "parameters_per_transformer_block": 8321664,
     "final_norm_parameters": 832,
     "tied_token_embedding": true

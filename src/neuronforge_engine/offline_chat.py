@@ -11,6 +11,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .memory import select_relevant_memories
+
 _OPERATORS = {
     ast.Add: operator.add,
     ast.Sub: operator.sub,
@@ -143,9 +145,11 @@ class LocalConversationEngine:
                 return match.group(1)
         return None
 
-    def respond(self, messages: list[dict[str, str]], passages: list[dict[str, Any]] | None = None) -> str:
+    def respond(self, messages: list[dict[str, str]], passages: list[dict[str, Any]] | None = None,
+                memories: list[dict[str, str]] | None = None) -> str:
         message = self._last_user(messages).strip()
         lowered = message.lower().strip()
+        relevant_memories = select_relevant_memories(message, memories or [], limit=6)
         mood = self.conversation_signals.detect(message)
         tone = self.chat_tone.respond(message, mood)
 
@@ -197,7 +201,7 @@ class LocalConversationEngine:
             return "I don't have an earlier message to refer to in this conversation yet."
 
         if re.match(r"^(?:my name is|call me)\s+", lowered):
-            name = self._name_from_history(messages)
+            name = self._name_from_history(messages, memories)
             return f"Got it, {name}. I'll use that name during this conversation."
 
         if re.search(r"\b(?:can you swear|can you curse|use profanity|say a swear)\b", lowered):

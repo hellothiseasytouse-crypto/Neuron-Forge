@@ -96,22 +96,33 @@ jobs:
           best = read_checkpoint("checkpoints/neuron-forge-250m/best.pt", device="cpu")
           latest = read_checkpoint("checkpoints/neuron-forge-250m/latest.pt", device="cpu")
           actual = cfg.model.parameter_count()
+          model_cfg = best["model_config"]
+          train_cfg = cfg.train
           assert actual == 248_144_832
-          assert best["model_config"]["n_layer"] == 29
-          assert best["model_config"]["n_embd"] == 832
+          assert model_cfg["n_layer"] == cfg.model.n_layer == 29
+          assert model_cfg["n_head"] == cfg.model.n_head == 16
+          assert model_cfg["n_embd"] == cfg.model.n_embd == 832
+          tokens_seen = (
+              int(latest["step"])
+              * train_cfg.batch_size
+              * cfg.model.block_size
+              * train_cfg.gradient_accumulation_steps
+          )
           report = {
               "status": "trained_checkpoint_created",
               "parameters": actual,
-              "layers": 30,
-              "heads": 16,
-              "embedding_width": 832,
-              "context_length": 1024,
+              "layers": model_cfg["n_layer"],
+              "heads": model_cfg["n_head"],
+              "embedding_width": model_cfg["n_embd"],
+              "context_length": model_cfg["block_size"],
+              "vocabulary_size": model_cfg["vocab_size"],
               "initialization": "random_from_scratch",
               "training_steps": latest["step"],
+              "estimated_training_tokens_seen": tokens_seen,
               "best_checkpoint_step": best["step"],
               "best_validation_loss": best["best_val_loss"],
               "training_device": "CUDA",
-              "gradient_checkpointing": True,
+              "gradient_checkpointing": train_cfg.gradient_checkpointing,
               "corpus": "data/general_corpus.txt",
               "live_deployment": "not_deployed; requires separate GPU inference hosting and evaluation"
           }

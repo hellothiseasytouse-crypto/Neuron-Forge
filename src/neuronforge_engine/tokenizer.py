@@ -1,76 +1,99 @@
-"""A small, deterministic byte-level BPE tokenizer implemented in Python.
+"""Fast byte-level BPE tokenizer for Neuron Forge.
 
-The first 256 token IDs represent raw bytes. Every learned token is a merge of
-an earlier pair, so any UTF-8 input can always be encoded without an UNK token.
+New checkpoints store a Hugging Face Tokenizers JSON payload. The legacy
+pure-Python merge format remains readable so older experimental checkpoints
+continue to work.
 """
 from collections import Counter
-from dataclasses import dataclass
 from typing import Iterable
 
 
-@dataclass
 class ByteBPETokenizer:
-    merges: list[tuple[int, int]]
-    token_bytes: list[bytes]
-
-    def __init__(self, merges: Iterable[tuple[int, int]] | None = None):
+    def __init__(self, merges: Iterable[tuple[int, int]] | None = None,
+                 tokenizer_json: str | None = None):
+        self._fast = None
         self.merges = []
         self.token_bytes = [bytes([i]) for i in range(256)]
-        for pair in merges or []:
-            self._append_merge((int(pair[0]), int(pair[1])))
 
-    def _append_merge(self, pair: tuple[int, int]) -> None:
-        left, right = pair
-        if left < 0 or right < 0 or left >= len(self.token_bytes) or right >= len(self.token_bytes):
-            raise ValueError(f"Invalid BPE merge references: {pair}")
-        self.merges.append(pair)
-        self.token_bytes.append(self.token_bytes[left] + self.token_bytes[right])
+        if tokenizer_json is not None:
+            try:
+                from tokenizers import Tokenizer
+            except ImportError as exc:
+                raise RuntimeError(
+                    "This checkpoint uses the fast BPE tokenizer. Install the project dependencies."
+                ) from exc
+            self._fast = Tokenizer.from_str(tokenizer_json)
+            return
+
+        for pair in merges or []:
+            left, right = int(pair[0]), int(pair[1])
+            if left < 0 or right < 0 or left >= len(self.token_bytes) or right >= len(self.token_bytes):
+                raise ValueError(f"Invalid BPE merge references: {(left, right)}")
+            self.merges.append((left, right))
+            self.token_bytes.append(self.token_bytes[left] + self.token_bytes[right])
 
     @classmethod
     def train(cls, text: str, vocab_size: int = 512, min_frequency: int = 2,
               max_train_chars: int = 2_000_000) -> "ByteBPETokenizer":
-        if vocab_size < 256:
-            raise ValueError("vocab_size must be at least 256")
+        if vocab_size < 257:
+            raise ValueError("vocab_size must be at least 257 for byte-level BPE")
         if min_frequency < 2:
             raise ValueError("min_frequency must be at least 2")
-        if max_train_chars > 0:
-            text = text[:max_train_chars]
-        tokens = list(text.encode("utf-8"))
-        learned: list[tuple[int, int]] = []
-        next_id = 256
-        for _ in range(vocab_size - 256):
-            if len(tokens) < 2:
-                break
-            counts = Counter(zip(tokens, tokens[1:]))
-            if not counts:
-                break
-            pair, count = max(counts.items(), key=lambda item: (item[1], item[0]))
-            if count < min_frequency:
-                break
-            merged: list[int] = []
-            i = 0
-            while i < len(tokens):
-                if i + 1 < len(tokens) and (tokens[i], tokens[i + 1]) == pair:
-                    merged.append(next_id)
-                    i += 2
-                else:
-                    merged.append(tokens[i])
-                    i += 1
-            tokens = merged
-            learned.append(pair)
-            next_id += 1
-        return cls(learned)
+        sample = text[:max_train_chars] if max_train_chars > 0 else text
+        if not sample.strip():
+            raise ValueError("Cannot train a tokenizer on empty text")
+
+        try:
+            from tokenizers import Tokenizer
+            from tokenizers.decoders import ByteLevel
+            from tokenizers.models import BPE
+            from tokenizers.pre_tokenizers import ByteLevel as ByteLevelPreTokenizer
+            from tokenizers.trainers import BpeTrainer
+        except ImportError as exc:
+            raise RuntimeError(
+                "Fast tokenizer support is missing. Install with: pip install tokenizers"
+            ) from exc
+
+        tokenizer = Tokenizer(BPE(unk_token="<unk>"))
+        tokenizer.pre_tokenizer = ByteLevelPreTokenizer(add_prefix_space=False)
+        tokenizer.decoder = ByteLevel()
+        trainer = BpeTrainer(
+            vocab_size=vocab_size,
+            min_frequency=min_frequency,
+            special_tokens=["<unk>"],
+            initial_alphabet=ByteLevelPreTokenizer.alphabet(),
+            max_token_length=64,
+            show_progress=True,
+        )
+
+        chunk_size = 250_000
+        chunks = (sample[i:i + chunk_size] for i in range(0, len(sample), chunk_size))
+        tokenizer.train_from_iterator(
+            chunks,
+            trainer=trainer,
+            length=(len(sample) + chunk_size - 1) // chunk_size,
+        )
+        result = cls(tokenizer_json=tokenizer.to_str())
+        if result.vocab_size != vocab_size:
+            raise ValueError(
+                f"Tokenizer learned {result.vocab_size:,} tokens; expected {vocab_size:,}. "
+                "Provide more diverse training text."
+            )
+        return result
 
     @classmethod
     def from_text(cls, text: str, vocab_size: int = 512) -> "ByteBPETokenizer":
-        """Compatibility helper for callers that prefer a from_text constructor."""
         return cls.train(text, vocab_size=vocab_size)
 
     @property
     def vocab_size(self) -> int:
+        if self._fast is not None:
+            return self._fast.get_vocab_size(with_added_tokens=True)
         return len(self.token_bytes)
 
     def encode(self, text: str) -> list[int]:
+        if self._fast is not None:
+            return self._fast.encode(text).ids
         ids = list(text.encode("utf-8"))
         for merge_index, pair in enumerate(self.merges):
             merged_id = 256 + merge_index
@@ -87,18 +110,28 @@ class ByteBPETokenizer:
         return ids
 
     def decode(self, ids: Iterable[int]) -> str:
+        values = [int(token_id) for token_id in ids]
+        if self._fast is not None:
+            return self._fast.decode(values, skip_special_tokens=False)
         chunks: list[bytes] = []
-        for token_id in ids:
+        for token_id in values:
             if token_id < 0 or token_id >= self.vocab_size:
                 raise ValueError(f"Token ID out of range: {token_id}")
             chunks.append(self.token_bytes[token_id])
         return b"".join(chunks).decode("utf-8", errors="replace")
 
     def to_state_dict(self) -> dict:
+        if self._fast is not None:
+            return {"tokenizer_json": self._fast.to_str()}
         return {"merges": [list(pair) for pair in self.merges]}
 
     @classmethod
     def from_state_dict(cls, state: dict) -> "ByteBPETokenizer":
-        if not isinstance(state, dict) or not isinstance(state.get("merges", []), list):
+        if not isinstance(state, dict):
             raise ValueError("Invalid tokenizer checkpoint")
-        return cls([tuple(pair) for pair in state.get("merges", [])])
+        if isinstance(state.get("tokenizer_json"), str):
+            return cls(tokenizer_json=state["tokenizer_json"])
+        merges = state.get("merges", [])
+        if not isinstance(merges, list):
+            raise ValueError("Invalid legacy tokenizer checkpoint")
+        return cls([tuple(pair) for pair in merges])

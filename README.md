@@ -10,12 +10,12 @@ The production website currently uses a small local conversation layer with brow
 
 ## Main model target: 250M
 
-A from-scratch architecture has been configured with **249,970,240 trainable parameters**. See [the exact model configuration](configs/250m.yaml), [architecture manifest](configs/250m-architecture.json), and [training plan](docs/250M_MODEL_PLAN.md).
+A from-scratch architecture has been configured with **248,144,832 trainable parameters**. See [the exact model configuration](configs/250m.yaml), [architecture manifest](configs/250m-architecture.json), and [training plan](docs/250M_MODEL_PLAN.md).
 
 | Setting | Value |
 | --- | ---: |
-| Parameters | 249,970,240 |
-| Transformer layers | 30 |
+| Parameters | 248,144,832 |
+| Transformer layers | 29 |
 | Attention heads | 16 |
 | Embedding width | 832 |
 | Context length | 1,024 |

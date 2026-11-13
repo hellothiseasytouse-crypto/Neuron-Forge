@@ -24,9 +24,15 @@ A from-scratch architecture has been configured with **248,144,832 trainable par
 | Feed-forward | SwiGLU |
 | Training | Random initialization, from scratch |
 
-**Status: architecture configured; training not started.** The 250M workflow requires a self-hosted CUDA GPU runner and a separate, large, diverse, legally usable general-domain corpus at `data/general_corpus.txt`. It deliberately refuses to train on the old Shakespeare-only set or on FAI/Dying Ember project notes. The current CPU-only hosted runner and the current Vercel serverless function are not suitable for training or serving this model.
+**Status: architecture configured; no completed 250M checkpoint yet.** The old self-hosted GitHub workflow remains available, and a resumable free-GPU Colab notebook has now been added. The notebook prepares its own attributed general-text corpus and saves checkpoints to Google Drive. The CPU-only hosted runner and the current Vercel serverless function are not suitable for training or serving this model.
 
 The model's parameter count is not a claim of intelligence. It must still be trained, instruction-tuned, and evaluated before it can answer like a dependable assistant. No 250M checkpoint exists yet.
+
+### Start the 250M training run
+
+Open the [Neuron Forge 250M Google Colab notebook](https://colab.research.google.com/github/hellothiseasytouse-crypto/Neuron-Forge/blob/main/notebooks/train_250m_colab.ipynb). Select a free CUDA GPU if one is available, authorize Google Drive when prompted, and run the cells in order. It builds an English Wikipedia corpus with a source-attribution record, verifies the GPU, trains from random initialization, and saves optimizer-inclusive checkpoints to Drive every 250 steps so later sessions can resume.
+
+Colab controls free GPU availability and session duration; neither is guaranteed. The 100,000-step target may require many sessions. Training is not considered complete until a checkpoint report records the final step and validation metrics. The live website does not load this model automatically.
 
 ## Other experiments
 
@@ -53,7 +59,7 @@ print(f"{cfg.model.parameter_count():,} trainable parameters")
 PY
 ```
 
-The 250M model's manual GPU training workflow is `.github/workflows/train-250m.yml`. It requires a runner labelled `self-hosted, linux, x64, gpu` and the separate general-domain corpus. It is intentionally not triggered by ordinary code pushes.
+The 250M model also has a manual GitHub Actions workflow at `.github/workflows/train-250m.yml`, which requires a self-hosted CUDA GPU runner and a prepared general-domain corpus. It is intentionally not triggered by ordinary code pushes.
 
 ## Repository structure
 

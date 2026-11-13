@@ -132,7 +132,7 @@
             </form>
           </div>
 
-          <p class="quiet-note">Offline assistant · conversation history stays in this browser · no hosted AI API is called</p>
+          <p class="quiet-note">Offline assistant · chats saved in this browser · no third-party model provider</p>
         </div>
       </section>
 
@@ -150,7 +150,7 @@
           <div class="about-card">
             <div class="about-card-mark">N</div>
             <h2>An offline FAI-centered conversation prototype</h2>
-            <p>This version answers through a local conversation engine. It does not connect to Vercel AI Gateway or call an external AI API. The original Dying Ember source document is stored in the repository and is treated as the authority for the four FAI systems. Conversation history and cross-chat context are stored in this browser's local storage, not synced to a server or other devices.</p>
+            <p>This version answers through a local conversation engine. It does not connect to Vercel AI Gateway or call an external AI API. The original Dying Ember source document is stored in the repository and is treated as the authority for the four FAI systems. Conversation history is stored in this browser's local storage and is not synced across devices. Relevant excerpts are sent to this project's own offline endpoint with each request; no third-party model provider is used.</p>
             <p>The repository also contains a from-scratch GPT-style Transformer and training pipeline, but no trained general-purpose checkpoint is available yet. Until that model is trained, this offline prototype supports basic conversation, simple arithmetic, source-grounded answers about Dying Ember, and searches of the local Shakespeare collection. It does not pretend to have broad intelligence it has not learned.</p>
             <div class="description-credit about-credit"><span class="credit-rule"></span><span>Created by - Smiling cat lab's</span></div>
           </div>

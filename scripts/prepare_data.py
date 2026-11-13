@@ -39,7 +39,7 @@ def main() -> None:
         if source_text:
             source_words = len(WORD_RE.findall(source_text))
             total_words += source_words
-            parts.append("[Project Dying Ember canonical source]\\n" + source_text)
+            parts.append("[Project Dying Ember canonical source]\n" + source_text)
             manifest.append({
                 "path": fai_source.relative_to(ROOT).as_posix(),
                 "characters": len(source_text),

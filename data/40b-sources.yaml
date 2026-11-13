@@ -1,0 +1,19 @@
+# Seed data source manifest for the Neuron Forge 40B pretraining pipeline.
+# Add only datasets whose terms permit the intended training and redistribution.
+# The pipeline writes source attribution into dataset-manifest.json.
+tokenizer_vocab_size: 65536
+tokenizer_documents: 250000
+validation_percent: 5
+minimum_document_characters: 300
+sources:
+  - name: English Wikipedia
+    dataset_id: wikimedia/wikipedia
+    dataset_config: 20231101.en
+    split: train
+    text_field: text
+    title_field: title
+    url_field: url
+    enabled: true
+    license: CC BY-SA 3.0 and GNU Free Documentation License (GFDL)
+    attribution: Wikimedia Foundation, English Wikipedia dump subset 20231101.en. Preserve article title and source URL attribution; review and comply with the dataset and source licenses before redistributing trained weights or outputs.
+    dataset_card: https://huggingface.co/datasets/wikimedia/wikipedia

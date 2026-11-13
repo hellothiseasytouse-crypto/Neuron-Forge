@@ -1,0 +1,109 @@
+name: Train Neuron Forge 40B
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_steps:
+        description: "Optional limited step count for a smoke test; leave empty for the 800B-token target"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neuron-forge-40b-training
+  cancel-in-progress: false
+
+jobs:
+  train:
+    name: Distributed 40B pretraining (self-hosted GPU cluster)
+    runs-on: [self-hosted, linux, x64, gpu, multi-gpu]
+    timeout-minutes: 8640
+    env:
+      TOKENIZERS_PARALLELISM: "false"
+      OMP_NUM_THREADS: "8"
+    steps:
+      - name: Check out Neuron Forge
+        uses: actions/checkout@v4
+
+      - name: Verify CUDA cluster
+        shell: bash
+        run: |
+          nvidia-smi
+          python - <<'PY'
+          import torch
+          count = torch.cuda.device_count()
+          print("PyTorch:", torch.__version__)
+          print("CUDA:", torch.version.cuda)
+          print("Visible GPUs:", count)
+          if not torch.cuda.is_available() or count < 16:
+              raise SystemExit("Neuron Forge 40B requires at least 16 visible CUDA GPUs.")
+          for index in range(count):
+              props = torch.cuda.get_device_properties(index)
+              memory = props.total_memory / (1024 ** 3)
+              print(f"GPU {index}: {props.name}, {memory:.1f} GiB")
+              if not torch.cuda.is_bf16_supported():
+                  raise SystemExit(f"GPU {index} does not support BF16.")
+          PY
+
+      - name: Install repository and data tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . --no-deps
+          python -m pip install "datasets>=3.0" "tokenizers>=0.21,<1" "pyyaml>=6.0" "numpy>=1.26,<3"
+
+      - name: Prepare the approved corpus if needed
+        run: |
+          if [ ! -s data/40b/train.bin ] || [ ! -s data/40b/validation.bin ] || [ ! -s data/40b/tokenizer.json ]; then
+            python scripts/prepare_40b_data.py --config data/40b-sources.yaml --output-dir data/40b
+          else
+            echo "Using the existing prepared 40B token shards."
+          fi
+
+      - name: Verify data and architecture
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from neuronforge_engine.config import load_config
+          cfg = load_config("configs/40b.yaml")
+          actual = cfg.model.parameter_count()
+          print(f"Parameters: {actual:,}")
+          assert actual == 40_000_905_216
+          manifest = json.loads(Path("data/40b/dataset-manifest.json").read_text())
+          print("Data manifest:", json.dumps({
+              "documents": manifest["documents_downloaded"],
+              "train_tokens": manifest["train_tokens"],
+              "validation_tokens": manifest["validation_tokens"],
+              "sources": [item["dataset_id"] for item in manifest["sources"]],
+          }, indent=2))
+          if manifest["train_tokens"] < 10_000_000:
+              raise SystemExit("Refusing to train: fewer than 10M training tokens were prepared.")
+          PY
+
+      - name: Run distributed pretraining
+        shell: bash
+        run: |
+          set -o pipefail
+          GPU_COUNT=$(python -c "import torch; print(torch.cuda.device_count())")
+          ARGS=(--config configs/40b.yaml --data-dir data/40b --checkpoint-dir checkpoints/neuron-forge-40b)
+          if [ -n "${{ inputs.max_steps }}" ]; then
+            ARGS+=(--max-steps "${{ inputs.max_steps }}")
+          fi
+          mkdir -p checkpoints/neuron-forge-40b
+          torchrun --standalone --nnodes=1 --nproc_per_node="$GPU_COUNT" scripts/train_40b_fsdp.py "${ARGS[@]}" 2>&1 | tee checkpoints/neuron-forge-40b/training.log
+
+      - name: Write final run summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("checkpoints/neuron-forge-40b")
+          latest = root / "latest.json"
+          if latest.exists():
+              print("Latest checkpoint:", json.dumps(json.loads(latest.read_text()), indent=2))
+          else:
+              print("No checkpoint was created. Inspect the training log and runner output.")
+          PY

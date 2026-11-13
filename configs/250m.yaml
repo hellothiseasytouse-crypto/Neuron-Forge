@@ -1,0 +1,29 @@
+# Neuron Forge 250M-class model.
+# This configuration is for a dedicated CUDA GPU runner and a curated general
+# text corpus. It is not suitable for the CPU-only GitHub hosted runner.
+model:
+  block_size: 1024
+  n_layer: 30
+  n_head: 16
+  n_embd: 832
+  dropout: 0.05
+tokenizer:
+  vocab_size: 384
+  min_frequency: 2
+  max_train_chars: 100000000
+train:
+  data_path: data/general_corpus.txt
+  batch_size: 1
+  max_steps: 100000
+  learning_rate: 0.0002
+  min_learning_rate: 0.00002
+  warmup_steps: 2000
+  eval_interval: 500
+  eval_batches: 4
+  weight_decay: 0.1
+  grad_clip: 1.0
+  gradient_accumulation_steps: 32
+  gradient_checkpointing: true
+  checkpoint_path: checkpoints/neuron-forge-250m/latest.pt
+  seed: 20261113
+  device: cuda

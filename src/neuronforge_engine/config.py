@@ -15,6 +15,18 @@ class ModelConfig:
     n_embd: int = 128
     dropout: float = 0.1
 
+    def parameter_count(self) -> int:
+        """Return the exact trainable parameter count for the tied-embedding GPT."""
+        hidden = ((8 * self.n_embd // 3 + 7) // 8) * 8
+        per_block = (
+            3 * self.n_embd * self.n_embd
+            + self.n_embd * self.n_embd
+            + 2 * self.n_embd * hidden
+            + self.n_embd * hidden
+            + 2 * self.n_embd
+        )
+        return self.vocab_size * self.n_embd + self.n_layer * per_block + self.n_embd
+
     def validate(self) -> None:
         if self.vocab_size < 256:
             raise ValueError("vocab_size must be at least 256 for byte-level tokenization")
@@ -58,6 +70,7 @@ class TrainConfig:
     weight_decay: float = 0.1
     grad_clip: float = 1.0
     gradient_accumulation_steps: int = 1
+    gradient_checkpointing: bool = False
     checkpoint_path: str = "checkpoints/latest.pt"
     seed: int = 1337
     device: str = "auto"

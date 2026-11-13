@@ -1,0 +1,27 @@
+# Continuation run: resume the first trained checkpoint with a lower learning rate.
+# Same architecture/tokenizer as configs/first-train.yaml; trains through step 6,000.
+model:
+  block_size: 96
+  n_layer: 2
+  n_head: 4
+  n_embd: 96
+  dropout: 0.1
+tokenizer:
+  vocab_size: 384
+  min_frequency: 2
+  max_train_chars: 300000
+train:
+  data_path: data/processed/shakespeare_corpus.txt
+  batch_size: 8
+  max_steps: 6000
+  learning_rate: 0.0001
+  min_learning_rate: 0.00002
+  warmup_steps: 0
+  eval_interval: 250
+  eval_batches: 8
+  weight_decay: 0.1
+  grad_clip: 1.0
+  gradient_accumulation_steps: 1
+  checkpoint_path: checkpoints/latest.pt
+  seed: 1337
+  device: cpu

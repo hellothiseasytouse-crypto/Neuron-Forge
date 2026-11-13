@@ -71,7 +71,11 @@ def train(config: Config, resume: bool = False) -> Path:
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(config.train.seed)
     device = choose_device(config.train.device)
-    print(f"Neuron Forge training device: {device}")
+    use_amp = device.type == "cuda"
+    amp_dtype = torch.bfloat16 if use_amp and torch.cuda.is_bf16_supported() else torch.float16
+    scaler = torch.amp.GradScaler("cuda", enabled=use_amp and amp_dtype == torch.float16)
+    precision_label = "bfloat16" if use_amp and amp_dtype == torch.bfloat16 else ("float16" if use_amp else "float32")
+    print(f"Neuron Forge training device: {device} | precision: {precision_label}")
 
     text = load_text(config.train.data_path)
     checkpoint_path = Path(config.train.checkpoint_path)
@@ -120,11 +124,14 @@ def train(config: Config, resume: bool = False) -> Path:
         optimizer.zero_grad(set_to_none=True)
         for _ in range(config.train.gradient_accumulation_steps):
             x, y = get_batch(train_data, config.model.block_size, config.train.batch_size, device)
-            _, loss = model(x, y)
-            (loss / config.train.gradient_accumulation_steps).backward()
+            with torch.autocast(device_type="cuda", dtype=amp_dtype, enabled=use_amp):
+                _, loss = model(x, y)
+            scaler.scale(loss / config.train.gradient_accumulation_steps).backward()
+        scaler.unscale_(optimizer)
         if config.train.grad_clip > 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), config.train.grad_clip)
-        optimizer.step()
+        scaler.step(optimizer)
+        scaler.update()
 
         completed_step = step + 1
         if completed_step == 1 or completed_step % config.train.eval_interval == 0 or completed_step == config.train.max_steps:

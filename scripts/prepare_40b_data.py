@@ -72,7 +72,7 @@ def stream_sources(config: dict, raw_path: Path, max_documents: int) -> tuple[in
                 if not isinstance(text, str):
                     skipped += 1
                     continue
-                text = re.sub(r"\\s+", " ", text).strip()
+                text = re.sub(r"\s+", " ", text).strip()
                 if len(text) < int(config.get("minimum_document_characters", 300)):
                     skipped += 1
                     continue

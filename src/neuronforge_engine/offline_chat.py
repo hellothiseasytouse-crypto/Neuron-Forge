@@ -225,7 +225,7 @@ class LocalConversationEngine:
         if re.search(r"\b(?:what did i say|what was my name|do you remember my name)\b", lowered):
             name = self._name_from_history(messages[:-1], memories)
             if name:
-                return f"You told me to call you {name} earlier in this conversation."
+                return f"You previously told me to call you {name}. I found that detail in the saved conversations on this device."
             earlier = [m["content"] for m in messages[:-1] if m["role"] == "user"]
             if earlier:
                 return "Earlier in this chat, you said: " + earlier[-1][:350]

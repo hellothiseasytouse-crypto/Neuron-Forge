@@ -1,0 +1,29 @@
+# Neuron Forge 40B-class architecture blueprint.
+# This is a model definition only: no 40B checkpoint has been trained.
+# Existing single-device training code is NOT sufficient for this scale.
+model:
+  block_size: 2048
+  n_layer: 49
+  n_head: 64
+  n_embd: 8192
+  dropout: 0.0
+tokenizer:
+  vocab_size: 65536
+  min_frequency: 2
+  max_train_chars: 1000000000
+train:
+  data_path: data/general_corpus.txt
+  batch_size: 1
+  max_steps: 100000
+  learning_rate: 0.0001
+  min_learning_rate: 0.00001
+  warmup_steps: 4000
+  eval_interval: 1000
+  eval_batches: 4
+  weight_decay: 0.1
+  grad_clip: 1.0
+  gradient_accumulation_steps: 64
+  gradient_checkpointing: true
+  checkpoint_path: checkpoints/neuron-forge-40b/latest.pt
+  seed: 20261113
+  device: cuda

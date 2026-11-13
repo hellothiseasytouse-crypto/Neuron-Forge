@@ -199,7 +199,7 @@
     node.append(label, body);
     messages.appendChild(node);
     messages.scrollTop = messages.scrollHeight;
-    return { node, body };
+    return { node, body, label };
   }
 
   function clearConversation() {
@@ -253,6 +253,8 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "The request could not be completed.");
       pending.body.textContent = data.text || "I couldn't form an answer to that question.";
+      if (data.model_label) pending.label.textContent = data.model_label;
+      if (data.neural_experimental) pending.node.classList.add("experimental-neural");
       if (data.text) {
         conversationHistory.push({ role: "assistant", content: data.text });
         persistCurrentChat();
@@ -345,11 +347,12 @@
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || "Library unavailable");
       catalog = Array.isArray(data.works_catalog) ? data.works_catalog : [];
-      $("#top-status").textContent = data.assistant_ready ? "Local chat ready" : "Local chat unavailable";
-      $("#sidebar-status").textContent = data.assistant_ready ? "Local chat ready" : "Local chat unavailable";
-      $("#sidebar-status-detail").textContent = data.assistant_ready
-        ? "Offline chat · FAI source loaded"
-        : "Local engine unavailable";
+      const neuralReady = Boolean(data.neural_model && data.neural_model.loaded);
+      $("#top-status").textContent = neuralReady ? "Neuron Forge 1M · Experimental" : (data.assistant_ready ? "Local chat ready" : "Local chat unavailable");
+      $("#sidebar-status").textContent = data.assistant_ready ? "Hybrid chat ready" : "Local chat unavailable";
+      $("#sidebar-status-detail").textContent = neuralReady
+        ? formatNumber(data.neural_model.parameters) + " parameters · local neural inference"
+        : "Local conversation engine · FAI source loaded";
       $("#status-pip").classList.toggle("ready", Boolean(data.assistant_ready));
       $("#stat-works").textContent = formatNumber(catalog.length);
       $("#stat-words").textContent = formatNumber(data.training_words);

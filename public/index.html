@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#100d1d">
   <meta name="application-name" content="Neuron Forge">
-  <meta name="description" content="Neuron Forge is an offline conversation prototype organized around the original Dying Ember FAI source document.">
+  <meta name="description" content="Neuron Forge is an experimental 1M-parameter neural model with local conversation memory and source-aware offline tools.">
   <title>Neuron Forge</title>
   <link rel="icon" href="/neuron-forge-mark.svg?v=20261112-4" type="image/svg+xml">
   <link rel="manifest" href="/site.webmanifest?v=20261112-4">
@@ -82,7 +82,7 @@
           <div class="breadcrumb"><span>Neuron Forge</span><span class="crumb-slash">/</span><strong id="view-heading">Chat</strong></div>
         </div>
         <div class="topbar-right">
-          <span class="model-pill"><i></i><span id="top-status">Local FAI engine</span></span>
+          <span class="model-pill"><i></i><span id="top-status">Neuron Forge 1M · Experimental</span></span>
           <button class="icon-button clear-button" id="clear-chat" type="button" aria-label="Clear conversation" title="Clear conversation">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-.8 13H6.8L6 7m4 4v5m4-5v5"/></svg>
           </button>
@@ -94,7 +94,7 @@
           <div class="intro-block">
             <div class="intro-kicker"><span class="kicker-line"></span> THE SHAKESPEARE COLLECTION <span class="kicker-line"></span></div>
             <h1>Think beyond <em>the text.</em></h1>
-            <p class="intro-description">Talk with Neuron Forge locally. Conversations are saved in this browser so it can return to earlier chats and use relevant context in new ones. Its from-scratch Transformer is a separate research model that can be trained as the project grows.</p>
+            <p class="intro-description">Talk with Neuron Forge's experimental 1M-parameter neural model. Conversations are saved in this browser, with local tools for chat recall, arithmetic, Shakespeare lookup, and careful handling of the Dying Ember source. Open-ended neural output is still early research and can be inconsistent.</p>
             <div class="description-credit">
               <span class="credit-rule"></span>
               <span>Created by - Smiling cat lab's</span>
@@ -103,7 +103,7 @@
 
           <div class="conversation-panel">
             <div class="conversation-heading">
-              <div class="conversation-title"><span class="conversation-symbol">✳</span><div><strong>Conversation</strong><small>Offline conversation · FAI source-aware</small></div></div>
+              <div class="conversation-title"><span class="conversation-symbol">✳</span><div><strong>Conversation</strong><small>1M neural model · local memory + FAI source guardrails</small></div></div>
               <span class="conversation-tag">NEURON FORGE AI</span>
             </div>
 
@@ -132,7 +132,7 @@
             </form>
           </div>
 
-          <p class="quiet-note">Offline assistant · chats saved in this browser · no third-party model provider</p>
+          <p class="quiet-note">1M-parameter experimental neural generation · chats saved in this browser · no third-party model provider</p>
         </div>
       </section>
 
@@ -149,9 +149,9 @@
           <div class="page-heading"><div class="intro-kicker"><span class="kicker-line"></span> PROJECT NOTES</div><h1>About <em>Neuron Forge.</em></h1><p>An independent experiment in building language technology from the ground up.</p></div>
           <div class="about-card">
             <div class="about-card-mark">N</div>
-            <h2>An offline FAI-centered conversation prototype</h2>
-            <p>This version answers through a local conversation engine. It does not connect to Vercel AI Gateway or call an external AI API. The original Dying Ember source document is stored in the repository and is treated as the authority for the four FAI systems. Conversation history is stored in this browser's local storage and is not synced across devices. Relevant excerpts are sent to this project's own offline endpoint with each request; no third-party model provider is used.</p>
-            <p>The repository also contains a from-scratch GPT-style Transformer and training pipeline, but no trained general-purpose checkpoint is available yet. Until that model is trained, this offline prototype supports basic conversation, simple arithmetic, source-grounded answers about Dying Ember, and searches of the local Shakespeare collection. It does not pretend to have broad intelligence it has not learned.</p>
+            <h2>A 1M-parameter neural model with offline tools</h2>
+            <p>This version loads the 1,041,000-parameter Transformer trained from scratch in this repository. It uses lightweight NumPy CPU inference in the hosted function, with no Vercel AI Gateway or third-party model provider. Conversation history is stored in this browser's local storage and relevant excerpts are sent to this project's own endpoint with each request.</p>
+            <p>Deterministic local handlers remain in place for chat recall, simple arithmetic, Shakespeare lookup, and evidence-based Dying Ember answers. Open-ended messages are routed to the experimental neural checkpoint. This model is not instruction-tuned and its generated text can be incoherent or inaccurate; a larger 3B architecture is documented separately but has not been trained. The actual FAI conversation archive has not been provided, so the model does not claim to have reconstructed FAI's memories or personality.</p>
             <div class="description-credit about-credit"><span class="credit-rule"></span><span>Created by - Smiling cat lab's</span></div>
           </div>
           <div class="stats-grid">

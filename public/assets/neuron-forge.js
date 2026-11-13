@@ -163,10 +163,10 @@
       <h2>What are you thinking about?</h2>
       <p>Ask a question, explore an idea, or start a conversation about Shakespeare.</p>
       <div class="prompt-grid">
-        <button class="prompt-card" data-prompt="Find passages about ambition in Macbeth" type="button"><span class="prompt-icon violet">♜</span><span><strong>Ambition in Macbeth</strong><small>Power, choice, and consequence</small></span><span class="prompt-arrow">↗</span></button>
-        <button class="prompt-card" data-prompt="Show me passages about love in Romeo and Juliet" type="button"><span class="prompt-icon rose">♡</span><span><strong>Love in Romeo and Juliet</strong><small>Famous scenes and lines</small></span><span class="prompt-arrow">↗</span></button>
-        <button class="prompt-card" data-prompt="Find a sonnet about time and beauty" type="button"><span class="prompt-icon amber">❋</span><span><strong>Time and beauty</strong><small>Explore the sonnets</small></span><span class="prompt-arrow">↗</span></button>
-        <button class="prompt-card" data-prompt="Find passages about magic in The Tempest" type="button"><span class="prompt-icon teal">✧</span><span><strong>Magic in The Tempest</strong><small>Islands, spirits, and wonder</small></span><span class="prompt-arrow">↗</span></button>
+        <button class="prompt-card" data-prompt="Help me break down a difficult idea" type="button"><span class="prompt-icon violet">♜</span><span><strong>Understand an idea</strong><small>Explain it clearly, step by step</small></span><span class="prompt-arrow">↗</span></button>
+        <button class="prompt-card" data-prompt="Help me plan a project from scratch" type="button"><span class="prompt-icon rose">♡</span><span><strong>Plan a project</strong><small>Turn a rough idea into a clear plan</small></span><span class="prompt-arrow">↗</span></button>
+        <button class="prompt-card" data-prompt="Help me solve a problem step by step" type="button"><span class="prompt-icon amber">❋</span><span><strong>Work through a problem</strong><small>Break it into manageable steps</small></span><span class="prompt-arrow">↗</span></button>
+        <button class="prompt-card" data-prompt="Help me improve a piece of writing" type="button"><span class="prompt-icon teal">✧</span><span><strong>Improve my writing</strong><small>Make it clearer and more effective</small></span><span class="prompt-arrow">↗</span></button>
       </div>
     </div>`;
 
@@ -347,12 +347,12 @@
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || "Library unavailable");
       catalog = Array.isArray(data.works_catalog) ? data.works_catalog : [];
-      const neuralReady = Boolean(data.neural_model && data.neural_model.loaded);
-      $("#top-status").textContent = neuralReady ? "Neuron Forge 1M · Experimental" : (data.assistant_ready ? "Local chat ready" : "Local chat unavailable");
-      $("#sidebar-status").textContent = data.assistant_ready ? "Hybrid chat ready" : "Local chat unavailable";
-      $("#sidebar-status-detail").textContent = neuralReady
-        ? formatNumber(data.neural_model.parameters) + " parameters · local neural inference"
-        : "Local conversation engine · FAI source loaded";
+      const assistantReady = Boolean(data.assistant_ready);
+      $("#top-status").textContent = assistantReady ? "Neuron Forge · Local AI" : "Local assistant unavailable";
+      $("#sidebar-status").textContent = assistantReady ? "Local assistant ready" : "Local assistant unavailable";
+      $("#sidebar-status-detail").textContent = assistantReady
+        ? "browser chat context · arithmetic · reference search"
+        : "The local conversation service could not be reached";
       $("#status-pip").classList.toggle("ready", Boolean(data.assistant_ready));
       $("#stat-works").textContent = formatNumber(catalog.length);
       $("#stat-words").textContent = formatNumber(data.training_words);

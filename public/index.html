@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#100d1d">
   <meta name="application-name" content="Neuron Forge">
-  <meta name="description" content="Neuron Forge is an experimental 1M-parameter neural model with local conversation memory and source-aware offline tools.">
+  <meta name="description" content="Neuron Forge is an independent from-scratch AI research project with a local assistant, conversation memory, and offline tools.">
   <title>Neuron Forge</title>
-  <link rel="icon" href="/neuron-forge-mark.svg?v=20261112-4" type="image/svg+xml">
+  <link rel="icon" href="/neuron-forge-mark.svg?v=20261113-1" type="image/svg+xml">
   <link rel="manifest" href="/site.webmanifest?v=20261112-4">
   <link rel="stylesheet" href="/assets/neuron-forge.css?v=20261112-4">
   <link rel="stylesheet" href="/assets/neuron-forge-brand.css?v=20261112-4">
@@ -92,9 +92,9 @@
       <section class="view active" id="chat-view">
         <div class="chat-layout">
           <div class="intro-block">
-            <div class="intro-kicker"><span class="kicker-line"></span> THE SHAKESPEARE COLLECTION <span class="kicker-line"></span></div>
-            <h1>Think beyond <em>the text.</em></h1>
-            <p class="intro-description">Talk with Neuron Forge's experimental 1M-parameter neural model. Conversations are saved in this browser, with local tools for chat recall, arithmetic, Shakespeare lookup, and careful handling of the Dying Ember source. Open-ended neural output is still early research and can be inconsistent.</p>
+            <div class="intro-kicker"><span class="kicker-line"></span> LOCAL AI RESEARCH ASSISTANT <span class="kicker-line"></span></div>
+            <h1>Think clearly. <em>Build boldly.</em></h1>
+            <p class="intro-description">Talk with Neuron Forge, an independent AI research project built from the ground up. This edition includes a local conversation layer, browser-saved chat context, arithmetic, and a searchable reference library. Its experimental neural checkpoint is kept separate from live replies until it can follow instructions reliably.</p>
             <div class="description-credit">
               <span class="credit-rule"></span>
               <span>Created by - Smiling cat lab's</span>
@@ -103,20 +103,20 @@
 
           <div class="conversation-panel">
             <div class="conversation-heading">
-              <div class="conversation-title"><span class="conversation-symbol">✳</span><div><strong>Conversation</strong><small>1M neural model · local memory + FAI source guardrails</small></div></div>
+              <div class="conversation-title"><span class="conversation-symbol">✳</span><div><strong>Conversation</strong><small>Local assistant · conversation context + reference tools</small></div></div>
               <span class="conversation-tag">NEURON FORGE AI</span>
             </div>
 
             <div class="messages" id="messages" aria-live="polite">
               <div class="welcome-state" id="welcome-state">
                 <div class="welcome-orbit"><span class="orbit-dot"></span><span class="orbit-core">N</span><span class="orbit-star">✦</span></div>
-                <h2>What shall we explore?</h2>
-                <p>Start a conversation, ask about Dying Ember, or explore the local Shakespeare library.</p>
+                <h2>What are we working on?</h2>
+                <p>Ask a question, work through an idea, plan a project, or explore the reference library.</p>
                 <div class="prompt-grid">
-                  <button class="prompt-card" data-prompt="Find passages about ambition in Macbeth" type="button"><span class="prompt-icon violet">♜</span><span><strong>Ambition in Macbeth</strong><small>Power, choice, and consequence</small></span><span class="prompt-arrow">↗</span></button>
-                  <button class="prompt-card" data-prompt="Show me passages about love in Romeo and Juliet" type="button"><span class="prompt-icon rose">♡</span><span><strong>Love in Romeo and Juliet</strong><small>Famous scenes and lines</small></span><span class="prompt-arrow">↗</span></button>
-                  <button class="prompt-card" data-prompt="Find a sonnet about time and beauty" type="button"><span class="prompt-icon amber">❋</span><span><strong>Time and beauty</strong><small>Explore the sonnets</small></span><span class="prompt-arrow">↗</span></button>
-                  <button class="prompt-card" data-prompt="Find passages about magic in The Tempest" type="button"><span class="prompt-icon teal">✧</span><span><strong>Magic in The Tempest</strong><small>Islands, spirits, and wonder</small></span><span class="prompt-arrow">↗</span></button>
+                  <button class="prompt-card" data-prompt="Help me break down a difficult idea" type="button"><span class="prompt-icon violet">♜</span><span><strong>Understand an idea</strong><small>Explain it clearly, step by step</small></span><span class="prompt-arrow">↗</span></button>
+                  <button class="prompt-card" data-prompt="Help me plan a project from scratch" type="button"><span class="prompt-icon rose">♡</span><span><strong>Plan a project</strong><small>Turn a rough idea into a clear plan</small></span><span class="prompt-arrow">↗</span></button>
+                  <button class="prompt-card" data-prompt="Help me solve a problem step by step" type="button"><span class="prompt-icon amber">❋</span><span><strong>Work through a problem</strong><small>Break it into manageable steps</small></span><span class="prompt-arrow">↗</span></button>
+                  <button class="prompt-card" data-prompt="Help me improve a piece of writing" type="button"><span class="prompt-icon teal">✧</span><span><strong>Improve my writing</strong><small>Make it clearer and more effective</small></span><span class="prompt-arrow">↗</span></button>
                 </div>
               </div>
             </div>
@@ -132,7 +132,7 @@
             </form>
           </div>
 
-          <p class="quiet-note">1M-parameter experimental neural generation · chats saved in this browser · no third-party model provider</p>
+          <p class="quiet-note">From-scratch AI research · local chat context · no third-party model provider</p>
         </div>
       </section>
 
@@ -149,9 +149,9 @@
           <div class="page-heading"><div class="intro-kicker"><span class="kicker-line"></span> PROJECT NOTES</div><h1>About <em>Neuron Forge.</em></h1><p>An independent experiment in building language technology from the ground up.</p></div>
           <div class="about-card">
             <div class="about-card-mark">N</div>
-            <h2>A 1M-parameter neural model with offline tools</h2>
-            <p>This version loads the 1,041,000-parameter Transformer trained from scratch in this repository. It uses lightweight NumPy CPU inference in the hosted function, with no Vercel AI Gateway or third-party model provider. Conversation history is stored in this browser's local storage and relevant excerpts are sent to this project's own endpoint with each request.</p>
-            <p>Deterministic local handlers remain in place for chat recall, simple arithmetic, Shakespeare lookup, and evidence-based Dying Ember answers. Open-ended messages are routed to the experimental neural checkpoint. This model is not instruction-tuned and its generated text can be incoherent or inaccurate; a larger 3B architecture is documented separately but has not been trained. The actual FAI conversation archive has not been provided, so the model does not claim to have reconstructed FAI's memories or personality.</p>
+            <h2>A from-scratch AI research project</h2>
+            <p>Neuron Forge is an independent experiment in building AI technology from the ground up. The website currently uses a local conversation layer, browser-saved chat context, constrained arithmetic, and a searchable reference collection. It does not send conversations to a third-party model provider.</p>
+            <p>The 1,041,000-parameter Transformer remains in the repository as a research checkpoint, but it is not used to compose live chat replies because its unfiltered output did not meet basic quality standards. The 3B design is only a blueprint, not a trained model. Neuron Forge is not yet a capable general-purpose assistant; improving its own model requires substantially more training data, compute, instruction training, and evaluation.</p>
             <div class="description-credit about-credit"><span class="credit-rule"></span><span>Created by - Smiling cat lab's</span></div>
           </div>
           <div class="stats-grid">

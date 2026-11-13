@@ -8,7 +8,7 @@ Open **[Neuron Forge](https://neuron-forge-cyber-0ab0.vercel.app)**.
 
 The chat endpoint uses the Python offline conversation runtime in `src/neuronforge_engine/offline_chat.py`; it does not call Vercel AI Gateway or a third-party language-model provider. The website stores recent conversations in the browser and sends bounded, relevant excerpts to its own `/api/generate` endpoint for cross-chat continuity. The runtime supports basic conversation, saved-chat recall, safe arithmetic, source-grounded answers about the Dying Ember document, and local Shakespeare passage lookup.
 
-**Important distinction:** this offline runtime is a working conversational prototype, not a trained general-purpose neural language model. It does not have broad world knowledge or reliable open-ended reasoning. The from-scratch Transformer implementation is separate and still needs a suitable training corpus, sufficient compute, training, and evaluation before it can replace the prototype.
+**Important distinction:** the hosted offline runtime is a working conversational prototype, not a trained general-purpose neural language model. A one-million-parameter Transformer has now been trained and committed below, but it is still an experimental base model and is not yet used by the hosted chat endpoint.
 
 ## FAI source document
 
@@ -93,12 +93,14 @@ tests/                             # unit tests
 public/                            # website UI, icon, styles, and browser script
 ```
 
-## Trained checkpoint
+## Trained checkpoints
 
-The first from-scratch training and continuation runs are recorded in [`docs/TRAINING_RESULTS_2026-11-13.md`](docs/TRAINING_RESULTS_2026-11-13.md). The downloadable checkpoint and sample are attached to the [continued training run](https://github.com/hellothiseasytouse-crypto/Neuron-Forge/actions/runs/43425646511).
+The new **1,041,000-parameter model** is committed in [`models/neuron-forge-1m/`](models/neuron-forge-1m/). Its configuration, training run, best validation loss, dataset boundaries, and limitations are documented in [`docs/NEURON_FORGE_1M_TRAINING.md`](docs/NEURON_FORGE_1M_TRAINING.md).
+
+The earlier 258,528-parameter baseline and its continuation remain in [`models/neuron-forge-v1/`](models/neuron-forge-v1/). Historical results are recorded in [`docs/TRAINING_RESULTS_2026-11-13.md`](docs/TRAINING_RESULTS_2026-11-13.md).
 
 ## Current limitations
 
-The hosted chat runtime is still deterministic and limited; the upgraded Transformer is not wired into the hosted endpoint because there is no trained checkpoint and the hosted Python function intentionally does not bundle PyTorch. Training starts from random weights. The bundled Shakespeare corpus and short FAI source document are useful for pipeline testing and source familiarity, not enough to produce a capable general-purpose assistant. A strong from-scratch model requires a much larger, diverse, legally usable corpus, substantial accelerator compute, instruction training, robust evaluation, and safety work. Browser memory is stored locally, but selected excerpts are sent to the project's own endpoint when a response is requested; it is not synced across devices.
+The hosted chat runtime is still deterministic and limited; the trained Transformer checkpoints are not wired into the hosted endpoint, which intentionally does not bundle PyTorch. The current training corpus is Shakespeare-heavy plus the short FAI source document, which is not enough to produce a capable general-purpose assistant. A strong from-scratch model requires a much larger, diverse, legally usable corpus, substantial accelerator compute, instruction training, robust evaluation, and safety work. Browser memory is stored locally, but selected excerpts are sent to the project's own endpoint when a response is requested; it is not synced across devices.
 
 The Dying Ember source warns that messages may be incomplete, joking, false, exaggerated, or contradictory. Reconstruction claims must remain tied to actual evidence. The original document is preserved as-is; any future archive ingestion should add evidence without modifying that source.

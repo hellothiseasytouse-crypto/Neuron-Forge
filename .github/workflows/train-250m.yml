@@ -1,0 +1,132 @@
+name: Train Neuron Forge 250M
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neuron-forge-250m-training
+  cancel-in-progress: false
+
+jobs:
+  train:
+    name: Train 250M model on CUDA
+    # This intentionally requires a GPU runner; it must never fall back to a
+    # small CPU GitHub-hosted runner for a job of this size.
+    runs-on: [self-hosted, linux, x64, gpu]
+    timeout-minutes: 360
+    env:
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
+      TOKENIZERS_PARALLELISM: "false"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify CUDA hardware and software
+        run: |
+          nvidia-smi
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,training]"
+          python - <<'PY'
+          import torch
+          if not torch.cuda.is_available():
+              raise SystemExit("A working CUDA GPU is required; refusing to run 250M training on CPU.")
+          print("GPU:", torch.cuda.get_device_name(0))
+          print("CUDA:", torch.version.cuda)
+          print("BF16 supported:", torch.cuda.is_bf16_supported())
+          print("GPU memory (GiB):", round(torch.cuda.get_device_properties(0).total_memory / 1024**3, 2))
+          PY
+
+      - name: Require a general-domain corpus
+        run: |
+          test -s data/general_corpus.txt || {
+            echo "Missing data/general_corpus.txt. Add a curated, legally usable general-domain corpus."
+            echo "The Shakespeare collection and FAI project notes are not accepted as the 250M training corpus."
+            exit 1
+          }
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("data/general_corpus.txt")
+          text = path.read_text(encoding="utf-8")
+          words = len(text.split())
+          print(f"General corpus: {words:,} whitespace-separated words; {len(text):,} characters")
+          if words < 10_000_000:
+              raise SystemExit("Corpus is too small for even a preliminary 250M training run; supply a much larger diverse corpus.")
+          PY
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Verify exact 250M architecture
+        run: |
+          python - <<'PY'
+          from neuronforge_engine.config import load_config
+          cfg = load_config("configs/250m.yaml")
+          count = cfg.model.parameter_count()
+          print(f"Trainable parameters: {count:,}")
+          assert count == 249_970_240, f"Unexpected architecture size: {count:,}"
+          assert cfg.train.device == "cuda"
+          assert cfg.train.gradient_checkpointing
+          PY
+
+      - name: Train from random initialization
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p checkpoints/neuron-forge-250m
+          neuronforge train --config configs/250m.yaml 2>&1 | tee checkpoints/neuron-forge-250m/training.log
+
+      - name: Generate a sample and write verified report
+        run: |
+          neuronforge generate             --checkpoint checkpoints/neuron-forge-250m/best.pt             --prompt "Hello. I am Neuron Forge."             --max-new-tokens 120             --temperature 0.8             --top-k 40             --top-p 0.95             --device cuda > checkpoints/neuron-forge-250m/sample.txt
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from neuronforge_engine.checkpoint import read_checkpoint
+          from neuronforge_engine.config import load_config
+          cfg = load_config("configs/250m.yaml")
+          best = read_checkpoint("checkpoints/neuron-forge-250m/best.pt", device="cpu")
+          latest = read_checkpoint("checkpoints/neuron-forge-250m/latest.pt", device="cpu")
+          actual = cfg.model.parameter_count()
+          assert actual == 249_970_240
+          assert best["model_config"]["n_layer"] == 30
+          assert best["model_config"]["n_embd"] == 832
+          report = {
+              "status": "trained_checkpoint_created",
+              "parameters": actual,
+              "layers": 30,
+              "heads": 16,
+              "embedding_width": 832,
+              "context_length": 1024,
+              "initialization": "random_from_scratch",
+              "training_steps": latest["step"],
+              "best_checkpoint_step": best["step"],
+              "best_validation_loss": best["best_val_loss"],
+              "training_device": "CUDA",
+              "gradient_checkpointing": True,
+              "corpus": "data/general_corpus.txt",
+              "live_deployment": "not_deployed; requires separate GPU inference hosting and evaluation"
+          }
+          Path("checkpoints/neuron-forge-250m/training-report.json").write_text(json.dumps(report, indent=2))
+          print(json.dumps(report, indent=2))
+          PY
+
+      - name: Upload trained model artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: neuron-forge-250m-checkpoint
+          path: |
+            checkpoints/neuron-forge-250m/best.pt
+            checkpoints/neuron-forge-250m/sample.txt
+            checkpoints/neuron-forge-250m/training.log
+            checkpoints/neuron-forge-250m/training-report.json
+          if-no-files-found: error
+          retention-days: 30

@@ -103,6 +103,9 @@ def train(config: Config, resume: bool = False) -> Path:
         )
 
     model = GPT(config.model).to(device)
+    model.gradient_checkpointing = bool(config.train.gradient_checkpointing)
+    if model.gradient_checkpointing:
+        print("Activation checkpointing: enabled")
     optimizer = _optimizer(model, config.train)
     start_step = 0
     best_val = float("inf")

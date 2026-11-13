@@ -1,7 +1,8 @@
-"""Offline conversation runtime built around the Dying Ember source of truth.
+"""Conversation layer for Neuron Forge's local assistant prototype.
 
-This is a deterministic, inspectable starter runtime, not a trained foundation
-model. It deliberately refuses to invent missing FAI evidence.
+This module deliberately avoids presenting raw, untrained language-model
+completions as answers. It provides memory, arithmetic, and reference-library
+routing while the from-scratch model remains a research checkpoint.
 """
 from __future__ import annotations
 
@@ -50,202 +51,127 @@ def _safe_math(expression: str) -> str | None:
         result = visit(ast.parse(expression, mode="eval"))
         if not (float("-inf") < result < float("inf")) or abs(result) > 1e12:
             return None
-        if result.is_integer():
-            return str(int(result))
-        return f"{result:.10g}"
+        return str(int(result)) if result.is_integer() else f"{result:.10g}"
     except (ArithmeticError, SyntaxError, TypeError, ValueError, OverflowError):
         return None
 
 
-class ChatTone:
-    """Controls the website assistant's voice; it is not FAI's personality model."""
-
-    def respond(self, message: str, mood: str) -> str:
-        # Natural language and profanity are allowed; no profanity filter is applied.
-        return "casual" if mood in {"frustrated", "excited"} or len(message.split()) < 12 else "clear"
-
-
-class ConversationSignals:
-    """Detects obvious cues in the current chat; this is not FAI's feelings model."""
-
-    _cues = {
-        "frustrated": ("angry", "annoyed", "frustrated", "fuck", "fucking", "shit", "damn"),
-        "excited": ("awesome", "great", "love this", "lets go", "let's go", "amazing"),
-        "sad": ("sad", "upset", "lonely", "depressed", "hurt"),
-        "uncertain": ("confused", "not sure", "unsure", "maybe", "i don't know"),
-    }
-
-    def detect(self, message: str) -> str:
-        lowered = message.lower()
-        for mood, terms in self._cues.items():
-            if any(term in lowered for term in terms):
-                return mood
-        return "neutral"
-
-
-class EvidencePolicy:
-    """Applies the source document's evidence-versus-assumption warning to answers."""
-
-    def __init__(self, source_text: str):
-        self.source_text = source_text
-
-    def evidence_answer(self) -> str:
-        return (
-            "The Dying Ember source says the archive is incomplete and that "
-            "nothing is to be treated as absolute without evidence. It defines "
-            "four systems exactly as follows:\n\n"
-            "PERSONALITY-AI — What the subject is like.\n"
-            "FEELINGS-AI — How the subject reacts emotionally.\n"
-            "RULE-AI — The behavioral rules discovered throughout the archive.\n"
-            "TRAITS-AI — The smaller characteristics that make the subject recognizable.\n\n"
-            "Together, these systems will form the final reconstruction: FAI-AI."
-        )
-
-    def missing_evidence_answer(self) -> str:
-        return (
-            "The source document defines the mission and the four systems, but it "
-            "does not contain the underlying months of subject conversations. "
-            "That means there is not enough subject evidence here to build a "
-            "reliable reconstruction yet. I will not fill those gaps with invented "
-            "memories, traits, or emotional claims."
-        )
-
-
-# Definitions copied from the original Dying Ember source document.
-# These are specifications, not claims that the subject has been reconstructed.
-FAI_SYSTEMS = (
-    ("PERSONALITY-AI", "What the subject is like."),
-    ("FEELINGS-AI", "How the subject reacts emotionally."),
-    ("RULE-AI", "The behavioral rules discovered throughout the archive."),
-    ("TRAITS-AI", "The smaller characteristics that make the subject recognizable."),
-)
-
-
 class LocalConversationEngine:
-    """A small local chat prototype; it makes no remote model or API calls."""
+    """A transparent local assistant layer; it does not impersonate a person."""
 
-    def __init__(self, source_path: str | Path):
-        path = Path(source_path)
-        self.source_text = path.read_text(encoding="utf-8") if path.is_file() else ""
-        self.chat_tone = ChatTone()
-        self.conversation_signals = ConversationSignals()
-        self.evidence_policy = EvidencePolicy(self.source_text)
+    def __init__(self, source_path: str | Path | None = None):
+        # source_path remains accepted for compatibility with older local callers.
+        self.source_path = Path(source_path) if source_path else None
 
     @staticmethod
     def _last_user(messages: list[dict[str, str]]) -> str:
         return next((m["content"] for m in reversed(messages) if m["role"] == "user"), "")
 
     @staticmethod
-    def _name_from_history(messages: list[dict[str, str]],
-                           memories: list[dict[str, str]] | None = None) -> str | None:
-        records = list(memories or []) + list(messages)
-        for item in reversed(records):
+    def _name_from_history(
+        messages: list[dict[str, str]],
+        memories: list[dict[str, str]] | None = None,
+    ) -> str | None:
+        for item in reversed(list(memories or []) + list(messages)):
             if item.get("role") != "user":
                 continue
             match = re.search(
                 r"\b(?:my name is|call me)\s+([A-Za-z][A-Za-z0-9_-]{0,30})",
-                item.get("content", ""), re.I,
+                item.get("content", ""),
+                re.I,
             )
             if match:
                 return match.group(1)
         return None
 
-    def respond(self, messages: list[dict[str, str]], passages: list[dict[str, Any]] | None = None,
-                memories: list[dict[str, str]] | None = None) -> str:
+    def respond(
+        self,
+        messages: list[dict[str, str]],
+        passages: list[dict[str, Any]] | None = None,
+        memories: list[dict[str, str]] | None = None,
+    ) -> str:
         message = self._last_user(messages).strip()
         lowered = message.lower().strip()
-        relevant_memories = select_relevant_memories(message, memories or [], limit=6)
-        mood = self.conversation_signals.detect(message)
-        tone = self.chat_tone.respond(message, mood)
+        memories = memories or []
 
         if not message:
-            return "Send me a message and we can start."
+            return "Send me a message and we can get started."
 
-        recall_pattern = r"\b(?:what did i say|what did you say|what were we talking about|what did we discuss|where did we leave off|continue where we left off|pick up where we left off|what do you remember about me)\b"
-        if re.search(recall_pattern, lowered):
-            name = self._name_from_history(messages[:-1], memories)
-            if name and re.search(r"\b(?:my name|name is)\b", lowered):
-                return f"You previously told me to call you {name}. I found that in the conversation history stored on this device."
-            records = list(memories or []) + messages[:-1]
-            recalled = select_relevant_memories(message, records, limit=8)
-            if recalled:
-                lines = [f"{item['role'].title()}: {item['content'][:420]}" for item in recalled[-6:]]
-                return "Here is the context I can retrieve from your saved conversations on this device:\n\n" + "\n".join(lines)
-            return "I couldn't find an earlier message matching that request in the conversations saved on this device."
-
-        if len(message.split()) <= 8 and re.search(
-            r"\b(?:continue|do it|make it better|make it stronger|that project|the project|same thing|go on|keep going)\b",
+        if re.search(
+            r"\b(?:what did i say|what did we discuss|what were we talking about|"
+            r"where did we leave off|continue where we left off|what do you remember about me)\b",
             lowered,
         ):
-            records = list(memories or []) + messages[:-1]
-            context = select_relevant_memories(message, records, limit=5)
+            name = self._name_from_history(messages[:-1], memories)
+            if name and re.search(r"\b(?:my name|name is)\b", lowered):
+                return f"You told me your name is {name}. I found that in the conversation history available to this browser."
+            records = memories + messages[:-1]
+            recalled = select_relevant_memories(message, records, limit=6)
+            if recalled:
+                excerpts = [
+                    f"{item['role'].title()}: {item['content'][:360]}"
+                    for item in recalled[-5:]
+                ]
+                return "Here's the earlier context I could retrieve:\n\n" + "\n".join(excerpts)
+            return "I couldn't find matching earlier context in the conversations available to this browser."
+
+        if len(message.split()) <= 10 and re.search(
+            r"\b(?:continue|do it|make it better|make it stronger|that project|the project|"
+            r"same thing|go on|keep going)\b",
+            lowered,
+        ):
+            context = select_relevant_memories(message, memories + messages[:-1], limit=4)
             if context:
-                lines = [f"{item['role'].title()}: {item['content'][:320]}" for item in context[-4:]]
+                excerpts = [
+                    f"{item['role'].title()}: {item['content'][:300]}"
+                    for item in context[-4:]
+                ]
                 return (
-                    "I found the earlier context:\n\n" + "\n".join(lines)
-                    + "\n\nI can carry this context forward. The hosted chat is still a local conversation engine; "
-                    "the separately trainable Transformer does not have a trained general-purpose checkpoint loaded yet."
+                    "I found the previous context:\n\n"
+                    + "\n".join(excerpts)
+                    + "\n\nI can use that context as we continue."
                 )
-
-        if re.search(r"\bwho is fai\b|\bsubject identity\b", lowered):
-            return (
-                "The Dying Ember source labels FAI as the subject, but lists the "
-                "objective as unknown. It does not provide the subject's identity "
-                "or enough conversation evidence to describe who they are. It says "
-                "the reconstruction must be built from evidence, not assumption."
-            )
-
-        if re.search(r"\b(?:what is|who is|tell me about|explain)\b.*\b(?:fai|dying ember)\b|\bfai-ai\b|\bthe four systems\b", lowered):
-            return self.evidence_policy.evidence_answer()
-
-        if re.search(r"\b(?:reconstruct|reconstruction|simulate|copy|personality)\b", lowered) and re.search(r"\b(?:fai|subject|archive)\b", lowered):
-            return self.evidence_policy.missing_evidence_answer()
+            return "I can continue, but I can't see enough of the earlier context. Remind me what we were working on."
 
         if re.fullmatch(r"(?:hi|hello|hey|yo|sup|heya|hii+)[!. ]*", lowered):
-            return "Hey. I'm here. What's up?"
+            return "Hey! What are you working on?"
 
         if re.search(r"\b(?:how are you|how's it going|hows it going)\b", lowered):
-            return "I'm running locally and ready to chat. What are you working on?"
+            return "I'm running locally and ready to help. What's on your mind?"
 
         if re.search(r"\b(?:who are you|what are you|your name)\b", lowered):
             return (
-                "I'm Neuron Forge. This version runs an offline conversation engine "
-                "with the Dying Ember source document and the local Shakespeare library. "
-                "It does not call an external AI API, and it is not yet a trained general-purpose model."
+                "I'm Neuron Forge, a from-scratch AI research project with a local chat layer. "
+                "I can use the context in this conversation, recall available browser-saved chats, "
+                "do constrained calculations, and search the included reference library. "
+                "The 1M-parameter neural checkpoint is still experimental, so I don't pass its "
+                "unfiltered text output off as reliable conversation."
             )
 
-        if re.search(r"\b(?:what can you do|help|capabilities)\b", lowered):
+        if re.search(r"\b(?:what can you do|your capabilities|capabilities|help)\b", lowered):
             return (
-                "Right now I can hold a basic conversation, remember details within this chat, "
-                "do simple arithmetic, answer questions about the exact Dying Ember source, "
-                "and search the local Shakespeare collection. I cannot reliably answer arbitrary "
-                "world-knowledge questions yet; the from-scratch language model still needs training."
+                "I can keep track of this conversation, retrieve relevant context from chats saved "
+                "in this browser, solve supported arithmetic, and search the local Shakespeare "
+                "reference collection. I can also help organize a problem when you provide its "
+                "details. Broad factual answering and open-ended reasoning are not reliable yet: "
+                "the from-scratch neural checkpoint is a small research model, not an instruction-trained assistant."
             )
 
         if re.search(r"\b(?:what did i say|what was my name|do you remember my name)\b", lowered):
             name = self._name_from_history(messages[:-1], memories)
             if name:
-                return f"You previously told me to call you {name}. I found that detail in the conversations stored on this device."
+                return f"You told me your name is {name}. That detail is in the conversation context available to me."
             earlier = [m["content"] for m in messages[:-1] if m["role"] == "user"]
             if earlier:
-                return "Earlier in this chat, you said: " + earlier[-1][:350]
-            return "I don't have an earlier message to refer to in this conversation yet."
+                return "The most recent thing you told me was: " + earlier[-1][:350]
+            return "I don't have an earlier message to refer to yet."
 
         if re.match(r"^(?:my name is|call me)\s+", lowered):
             name = self._name_from_history(messages, memories)
-            return f"Got it, {name}. I'll use that name during this conversation."
-
-        if re.search(r"\b(?:can you swear|can you curse|use profanity|say a swear)\b", lowered):
-            return "Yeah, fuck yeah. I can use profanity when it fits; I won't force it into every reply."
+            return f"Got it. I'll use {name} in this conversation." if name else "Got it."
 
         if re.search(r"\b(?:thanks|thank you|thx)\b", lowered):
-            return "You're welcome. What else?"
-
-        if re.search(r"\b(?:fuck you|you suck|you're useless|you are useless)\b", lowered):
-            return "Fair enough — tell me what failed and I'll try to fix the actual problem."
-
-        if re.search(r"\b(?:joke|make me laugh)\b", lowered):
-            return "Why did the programmer quit their job? They didn't get arrays. 🙃"
+            return "You're welcome. What should we tackle next?"
 
         math_match = re.fullmatch(
             r"\s*(?:(?:what is|calculate|solve|compute)\s+)?([0-9().+*/%\- ]+)\s*[?!.]*\s*",
@@ -257,34 +183,27 @@ class LocalConversationEngine:
             if result is not None and re.search(r"[+*/%]", expression):
                 return f"{expression} = {result}"
 
-        if re.search(r"\b(?:fai|dying ember|subject|archive|personality-ai|feelings-ai|rule-ai|traits-ai)\b", lowered):
-            return self.evidence_policy.evidence_answer() + "\n\n" + self.evidence_policy.missing_evidence_answer()
-
         if passages:
             first = passages[0]
-            work = first.get("work", "the Shakespeare collection")
+            work = first.get("work", "the local reference collection")
             excerpt = " ".join(str(first.get("text", "")).split())[:650]
             return (
-                f"I found a relevant passage in {work} in the local library:\n\n"
-                f"“{excerpt}”\n\n"
-                "This is a source excerpt, not a complete interpretation. I can search "
-                "the collection, but this offline prototype cannot yet explain every topic."
+                f"I found this passage in {work}:\n\n“{excerpt}”\n\n"
+                "That's the source text. I can help examine it, but I won't invent lines that aren't in the collection."
             )
 
-        if mood == "sad":
-            return "That sounds rough. Want to tell me what happened? I'll listen."
-        if mood == "frustrated":
-            return "I hear you. Tell me what you need fixed, and I'll focus on that instead of giving you a lecture."
-        if mood == "excited":
-            return "Let's go. Tell me more."
-        if tone == "clear":
+        if re.search(r"\b(?:fuck you|you suck|you're useless|you are useless)\b", lowered):
+            return "Fair criticism. Tell me what failed and I'll focus on fixing that."
+
+        if re.search(r"\b(?:write|draft|make|build|create|plan|design)\b", lowered):
             return (
-                "I can follow what you're saying, but I don't have a trained general-purpose "
-                "language model behind this offline prototype yet. I won't make up an answer. "
-                "I can still help with basic conversation, simple calculations, the Dying Ember "
-                "source document, and the local Shakespeare collection."
+                "I can help structure that. Send the goal, what you already have, and any constraints "
+                "that matter. This local build doesn't yet have a reliable instruction-trained model, "
+                "so I'll be clear about what I can verify instead of inventing a finished result."
             )
+
         return (
-            "I'm here. I can chat, keep track of what you've said in this conversation, "
-            "and work with the local material. I don't know enough to answer that one reliably yet."
+            "I follow what you're asking. I don't have enough reliable local knowledge to answer that "
+            "confidently yet, and the small research checkpoint isn't dependable enough to fill the gap. "
+            "Share the relevant details or a source, and I can work through the information with you."
         )

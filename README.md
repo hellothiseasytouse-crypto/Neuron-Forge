@@ -30,7 +30,8 @@ Together, the source identifies the final reconstruction as `FAI-AI`. The runtim
 - Offline conversation endpoint with no remote model/API dependency.
 - FAI source document preserved verbatim.
 - Four explicit FAI-system boundaries in the offline runtime.
-- Conversation history saved in the browser (up to 12 chats) with cross-chat context retrieval.\n- Bounded memory sanitization and lexical relevance ranking; obvious credential-bearing memory snippets are excluded from cross-chat context.
+- Conversation history saved in the browser (up to 12 chats) with cross-chat context retrieval.
+- Bounded memory sanitization and lexical relevance ranking; obvious credential-bearing memory snippets are excluded from cross-chat context.
 - Safe, constrained arithmetic parsing (no `eval`).
 - Local Shakespeare corpus retrieval as optional reference material.
 - Byte-level BPE tokenizer with a 256-byte base vocabulary and learned merges.
@@ -75,7 +76,8 @@ Open `http://127.0.0.1:8000`. The server binds to localhost by default. Do not e
 
 ```text
 src/neuronforge_engine/
-  offline_chat.py                 # local dialogue routing and FAI source boundaries\n  memory.py                       # bounded cross-chat memory ranking and sanitization
+  offline_chat.py                 # local dialogue routing and FAI source boundaries
+  memory.py                       # bounded cross-chat memory ranking and sanitization
   config.py                       # model and training configuration
   tokenizer.py                    # byte-level BPE
   data.py                         # corpus encoding and batch sampling

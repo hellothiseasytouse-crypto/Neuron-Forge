@@ -1,0 +1,67 @@
+name: Export Neuron Forge neural runtime
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/export-neural-runtime.yml"
+      - "scripts/export_numpy_checkpoint.py"
+      - "models/neuron-forge-1m/best.pt"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: neuron-forge-runtime-export
+  cancel-in-progress: false
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install CPU checkpoint exporter dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Export the best trained checkpoint for NumPy inference
+        run: |
+          test -s models/neuron-forge-1m/best.pt
+          python scripts/export_numpy_checkpoint.py \
+            --checkpoint models/neuron-forge-1m/best.pt \
+            --output models/neuron-forge-1m
+
+      - name: Smoke-test the exported model
+        run: |
+          PYTHONPATH=src python - <<'PY'
+          from neuronforge_engine.numpy_inference import NumpyNeuronForge
+          model = NumpyNeuronForge("models/neuron-forge-1m")
+          assert model.n_embd == 200 and model.n_layer == 2
+          assert model.checkpoint_step == 2000
+          text = model.generate("To be, or not to be:", max_new_tokens=4)
+          assert text.startswith("To be, or not to be:")
+          print("NumPy runtime loaded; checkpoint step:", model.checkpoint_step)
+          print("Smoke sample:", text)
+          PY
+
+      - name: Commit runtime weights and metadata to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add models/neuron-forge-1m/runtime.npz models/neuron-forge-1m/runtime.json
+          git commit -m "Export trained 1M model for hosted NumPy inference"
+          git push origin HEAD:main

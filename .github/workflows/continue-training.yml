@@ -1,0 +1,164 @@
+name: Continue Neuron Forge Training
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/continue-training.yml"
+      - "configs/continued-train.yaml"
+      - "src/neuronforge_engine/**"
+      - "scripts/prepare_data.py"
+      - "docs/FAI_SOURCE_DYING_EMBER.txt"
+      - "data/shakespeare/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: neuron-forge-continued-training
+  cancel-in-progress: false
+
+jobs:
+  continue-training:
+    name: Continue from first checkpoint
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OMP_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+      TOKENIZERS_PARALLELISM: "false"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install CPU-only PyTorch and project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install PyYAML pytest
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e . --no-deps
+
+      - name: Download the actual first-run checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: neuron-forge-first-trained-model
+          repository: hellothiseasytouse-crypto/Neuron-Forge
+          run-id: 43425107017
+          github-token: ${{ github.token }}
+          path: first-run-artifact
+
+      - name: Verify checkpoint and training report
+        run: |
+          test -s first-run-artifact/checkpoints/latest.pt
+          test -s first-run-artifact/training-report.json
+          mkdir -p checkpoints
+          cp first-run-artifact/checkpoints/latest.pt checkpoints/latest.pt
+          cp first-run-artifact/checkpoints/best.pt checkpoints/best.pt
+          python - <<'PY'
+          from neuronforge_engine.checkpoint import read_checkpoint
+          checkpoint = read_checkpoint("checkpoints/latest.pt", device="cpu")
+          assert checkpoint["format_version"] == 2
+          assert checkpoint["step"] == 1000
+          print("Loaded trained checkpoint at step", checkpoint["step"])
+          PY
+
+      - name: Verify code and architecture tests
+        run: pytest -q
+
+      - name: Prepare the same corpus
+        run: python scripts/prepare_data.py
+
+      - name: Continue training from saved model and optimizer
+        shell: bash
+        run: |
+          set -o pipefail
+          neuronforge train --config configs/continued-train.yaml --resume 2>&1 | tee continued-training.log
+
+      - name: Generate a sample from the continued checkpoint
+        run: |
+          neuronforge generate \
+            --checkpoint checkpoints/best.pt \
+            --prompt "To be, or not to be:" \
+            --max-new-tokens 160 \
+            --temperature 0.8 \
+            --top-k 40 \
+            --top-p 0.95 \
+            --device cpu > sample.txt
+          cat sample.txt
+
+      - name: Write final training report
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+          from neuronforge_engine.checkpoint import read_checkpoint
+          from neuronforge_engine.config import ModelConfig
+          from neuronforge_engine.model import GPT
+
+          latest = read_checkpoint("checkpoints/latest.pt", device="cpu")
+          best = read_checkpoint("checkpoints/best.pt", device="cpu")
+          initial = json.loads(Path("first-run-artifact/training-report.json").read_text(encoding="utf-8"))
+          cfg = ModelConfig(**best["model_config"])
+          model = GPT(cfg)
+          model.load_state_dict(best["model_state"])
+          log = Path("continued-training.log").read_text(encoding="utf-8")
+          precision = re.search(r"precision: ([^\\s]+)", log)
+          manifest = json.loads(Path("data/processed/manifest.json").read_text(encoding="utf-8"))
+          report = {
+              "status": "continued_training_complete",
+              "training_method": "random initialization followed by optimizer-state continuation; no pretrained model or remote AI API",
+              "architecture": "decoder-only Transformer: RoPE, RMSNorm, SwiGLU, causal scaled dot-product attention",
+              "checkpoint_format": latest["format_version"],
+              "initial_training_steps": initial["training_steps"],
+              "final_training_step": latest["step"],
+              "best_checkpoint_step": best["step"],
+              "initial_best_validation_loss": initial["best_validation_loss"],
+              "final_best_validation_loss": best["best_val_loss"],
+              "validation_loss_improved": best["best_val_loss"] < initial["best_validation_loss"],
+              "parameters": model.num_parameters(),
+              "vocabulary_size": cfg.vocab_size,
+              "context_length": cfg.block_size,
+              "layers": cfg.n_layer,
+              "heads": cfg.n_head,
+              "embedding_width": cfg.n_embd,
+              "precision": precision.group(1) if precision else "float32",
+              "corpus_words": manifest["word_count"],
+              "corpus_files": manifest["file_count"],
+              "checkpoint": "checkpoints/best.pt",
+              "latest_checkpoint": "checkpoints/latest.pt",
+              "sample": "sample.txt",
+              "limitations": [
+                  "This is a small Shakespeare-heavy base language model, not a general-purpose assistant.",
+                  "The Dying Ember source is a short project specification, not the missing FAI conversation archive.",
+                  "This checkpoint has not reconstructed FAI or learned FAI's personality."
+              ]
+          }
+          Path("training-report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+          print(json.dumps(report, indent=2))
+          if not report["validation_loss_improved"]:
+              raise SystemExit("Continued training did not improve on the first run's best validation loss.")
+          PY
+
+      - name: Upload continued model, metrics, and sample
+        uses: actions/upload-artifact@v4
+        with:
+          name: neuron-forge-continued-trained-model
+          path: |
+            checkpoints/best.pt
+            checkpoints/latest.pt
+            continued-training.log
+            training-report.json
+            sample.txt
+            data/processed/manifest.json
+          if-no-files-found: error
+          retention-days: 30

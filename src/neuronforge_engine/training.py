@@ -93,6 +93,11 @@ def train(config: Config, resume: bool = False) -> Path:
             min_frequency=config.tokenizer.min_frequency,
             max_train_chars=config.tokenizer.max_train_chars,
         )
+    if tokenizer.vocab_size != config.tokenizer.vocab_size:
+        raise ValueError(
+            f"Tokenizer learned {tokenizer.vocab_size:,} of {config.tokenizer.vocab_size:,} requested tokens. "
+            "Add more diverse corpus text before training this architecture."
+        )
     config.model.vocab_size = tokenizer.vocab_size
     train_data, val_data = encode_and_split(text, tokenizer)
     needed = config.model.block_size + 1

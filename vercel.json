@@ -6,7 +6,7 @@
   "functions": {
     "api/generate.py": {
       "maxDuration": 60,
-      "includeFiles": "{src/neuronforge_engine/**,models/neuron-forge-1m/**,public/shakespeare_index.json,docs/FAI_SOURCE_DYING_EMBER.txt}"
+      "includeFiles": "{src/neuronforge_engine/**,models/neuron-forge-1m/runtime.*,public/shakespeare_index.json,docs/FAI_SOURCE_DYING_EMBER.txt}"
     }
   }
 }

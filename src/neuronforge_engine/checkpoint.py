@@ -41,8 +41,6 @@ def read_checkpoint(path: str | Path, device: torch.device | str = "cpu") -> dic
 
 def load_model(path: str | Path, device: torch.device | str = "cpu"):
     checkpoint = read_checkpoint(path, device=device)
-    if checkpoint.get("format_version") != 1:
-        raise ValueError("Unsupported or invalid Neuron Forge checkpoint format")
     if checkpoint.get("format_version") != 2:
         raise ValueError("This checkpoint uses the previous Transformer architecture; retrain with the current Neuron Forge model.")
     model_cfg = ModelConfig(**checkpoint["model_config"])

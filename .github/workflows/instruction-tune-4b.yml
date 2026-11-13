@@ -49,14 +49,14 @@ jobs:
           PY
       - name: Instruction tune
         env:
-          MAX_STEPS: \${{ inputs.max_steps }}
+          MAX_STEPS: ${{ inputs.max_steps }}
         run: |
           set -o pipefail
           N=$(python -c "import torch; print(torch.cuda.device_count())")
           ARGS=(--config configs/4b-sft.yaml --data-dir data/4b-sft --pretrained-checkpoint checkpoints/neuron-forge-4b --checkpoint-dir checkpoints/neuron-forge-4b-sft)
           if [ -n "$MAX_STEPS" ]; then ARGS+=(--max-steps "$MAX_STEPS"); fi
           mkdir -p checkpoints/neuron-forge-4b-sft
-          torchrun --standalone --nnodes=1 --nproc_per_node="$N" scripts/instruction_tune_4b_fsdp.py "\${ARGS[@]}" 2>&1 | tee checkpoints/neuron-forge-4b-sft/training.log
+          torchrun --standalone --nnodes=1 --nproc_per_node="$N" scripts/instruction_tune_4b_fsdp.py "${ARGS[@]}" 2>&1 | tee checkpoints/neuron-forge-4b-sft/training.log
       - name: Report
         if: always()
         run: |

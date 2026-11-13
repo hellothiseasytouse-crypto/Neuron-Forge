@@ -127,9 +127,11 @@ class NumpyNeuronForge:
             raise ValueError("max_new_tokens must be between 1 and 96")
         if not 0.05 <= temperature <= 2.0:
             raise ValueError("temperature must be between 0.05 and 2.0")
-        ids = self.tokenizer.encode(prompt) or [10]
+        prompt_ids = self.tokenizer.encode(prompt) or [10]
+        context_ids = prompt_ids[-self.block_size:]
+        generated_ids = []
         for _ in range(max_new_tokens):
-            scores = self.logits(ids)[-1].astype(np.float64)
+            scores = self.logits(context_ids)[-1].astype(np.float64)
             scores /= temperature
             k = max(1, min(int(top_k), scores.size))
             keep = np.argpartition(scores, -k)[-k:]
@@ -145,7 +147,9 @@ class NumpyNeuronForge:
             allowed = order[:cutoff]
             allowed_probs = probs[:cutoff]
             allowed_probs = allowed_probs / allowed_probs.sum()
-            ids.append(int(self.rng.choice(allowed, p=allowed_probs)))
-            if len(ids) > self.block_size:
-                ids = ids[-self.block_size:]
-        return self.tokenizer.decode(ids)
+            next_id = int(self.rng.choice(allowed, p=allowed_probs))
+            generated_ids.append(next_id)
+            context_ids.append(next_id)
+            if len(context_ids) > self.block_size:
+                context_ids = context_ids[-self.block_size:]
+        return self.tokenizer.decode(prompt_ids + generated_ids)

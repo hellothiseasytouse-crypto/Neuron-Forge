@@ -1,0 +1,23 @@
+{
+  "model_name": "Neuron Forge 3B",
+  "status": "architecture_blueprint_only",
+  "parameters": 3021916160,
+  "parameter_target": "approximately 3.02 billion",
+  "model": {
+    "vocab_size": 384,
+    "block_size": 2048,
+    "n_layer": 60,
+    "n_head": 16,
+    "n_embd": 2048,
+    "dropout": 0.1
+  },
+  "architecture": "decoder-only Transformer with RoPE, RMSNorm, SwiGLU, causal scaled dot-product attention, and tied token embeddings",
+  "training": "not trained; requires sharded/distributed training and high-memory CUDA accelerator infrastructure",
+  "checkpoint_format": "Neuron Forge checkpoint format v2",
+  "deployment": "not suitable for the current Vercel serverless chat function; use a dedicated GPU inference service",
+  "notes": [
+    "Parameter count is derived from the current GPT implementation and this model shape.",
+    "The existing single-process training loop and CPU GitHub Actions runner are not capable of training this model.",
+    "No 3B checkpoint or trained weights exist yet."
+  ]
+}

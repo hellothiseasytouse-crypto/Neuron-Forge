@@ -187,6 +187,12 @@ def load_checkpoint(model, optimizer, checkpoint_root: Path, rank: int):
     return int(metadata["step"]), float(metadata.get("best_validation_loss", float("inf")))
 
 
+def append_metric(root: Path, record: dict, rank: int) -> None:
+    if rank == 0:
+        with (root / "metrics.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record) + "\n")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=Path("configs/4b.yaml"))
@@ -326,6 +332,7 @@ def main() -> None:
                         f"| lr {lr:.3e} | tokens seen {completed_step * tokens_per_step:,}",
                         flush=True,
                     )
+                    append_metric(args.checkpoint_dir, {"stage": "pretraining", "step": completed_step, "train_loss": float(averaged.item()), "learning_rate": lr, "tokens_seen": completed_step * tokens_per_step}, rank)
 
             should_evaluate = completed_step % config.train.eval_interval == 0 or completed_step == total_steps
             if should_evaluate:
@@ -338,6 +345,7 @@ def main() -> None:
                         f"| best {best_loss:.4f}",
                         flush=True,
                     )
+                    append_metric(args.checkpoint_dir, {"stage": "pretraining", "step": completed_step, "validation_loss": validation_loss, "best_validation_loss": best_loss}, rank)
                 save_checkpoint(model, optimizer, args.checkpoint_dir, completed_step, best_loss, rank)
 
         if rank == 0:

@@ -3,10 +3,12 @@
 - [x] Foundation source layout supplied in the initial ZIP
 - [x] Byte-level BPE tokenizer
 - [x] Dataset encoding, chronological train/validation split, and batch sampling
-- [x] Causal decoder-only Transformer with residual MLP blocks
+- [x] Causal decoder-only Transformer with RoPE, RMSNorm, SwiGLU, and scaled dot-product attention
 - [x] AdamW training, warmup/cosine schedule, gradient clipping, evaluation, and checkpoints
 - [x] Text generation with temperature, top-k, top-p, and repetition penalty
 - [x] CLI training, generation, and terminal chat
+- [x] Automatic CUDA mixed-precision training when supported
+- [x] Browser-local conversation persistence and cross-chat memory retrieval
 - [x] Optional local FastAPI endpoint and browser UI
 - [x] Unit tests and continuous integration
 - [ ] Add a tokenizer benchmark suite and streaming data loader for large corpora

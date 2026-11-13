@@ -31,10 +31,26 @@ def main() -> None:
             "words": words,
             "category": path.parent.name,
         })
+    # Include the canonical FAI source as a labelled training document.
+    # This is not the missing subject archive; do not fabricate or infer that data.
+    fai_source = ROOT / "docs" / "FAI_SOURCE_DYING_EMBER.txt"
+    if fai_source.is_file():
+        source_text = fai_source.read_text(encoding="utf-8").strip()
+        if source_text:
+            source_words = len(WORD_RE.findall(source_text))
+            total_words += source_words
+            parts.append("[Project Dying Ember canonical source]\n" + source_text)
+            manifest.append({
+                "path": fai_source.relative_to(ROOT).as_posix(),
+                "characters": len(source_text),
+                "words": source_words,
+                "category": "project-source",
+            })
+
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text("\n\n".join(parts) + "\n", encoding="utf-8")
     MANIFEST.write_text(json.dumps({
-        "corpus": "Shakespeare collected works",
+        "corpus": "Shakespeare collected works plus canonical Dying Ember source",
         "files": manifest,
         "file_count": len(manifest),
         "word_count": total_words,

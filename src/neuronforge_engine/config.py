@@ -24,6 +24,8 @@ class ModelConfig:
             raise ValueError("n_layer, n_head and n_embd must be positive")
         if self.n_embd % self.n_head:
             raise ValueError("n_embd must be divisible by n_head")
+        if (self.n_embd // self.n_head) % 2:
+            raise ValueError("each attention head must have an even width for rotary embeddings")
         if not 0.0 <= self.dropout < 1.0:
             raise ValueError("dropout must be in [0, 1)")
 
@@ -45,7 +47,7 @@ class TokenizerConfig:
 
 @dataclass
 class TrainConfig:
-    data_path: str = "data/raw/input.txt"
+    data_path: str = "data/processed/shakespeare_corpus.txt"
     batch_size: int = 16
     max_steps: int = 5_000
     learning_rate: float = 3e-4

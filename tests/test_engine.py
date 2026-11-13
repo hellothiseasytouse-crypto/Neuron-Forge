@@ -42,3 +42,24 @@ def test_split_returns_train_and_validation():
     train, val = encode_and_split(text, tokenizer)
     assert train.ndim == val.ndim == 1
     assert len(train) > len(val) > 0
+
+
+
+def test_transformer_attention_is_causal():
+    torch.manual_seed(7)
+    cfg = ModelConfig(vocab_size=300, block_size=16, n_layer=2, n_head=2, n_embd=32, dropout=0.0)
+    model = GPT(cfg).eval()
+    first = torch.tensor([[1, 2, 3, 4]], dtype=torch.long)
+    changed_future = torch.tensor([[1, 2, 3, 99]], dtype=torch.long)
+    with torch.no_grad():
+        logits_a, _ = model(first)
+        logits_b, _ = model(changed_future)
+    assert torch.allclose(logits_a[:, :3], logits_b[:, :3], atol=1e-6, rtol=1e-5)
+
+
+def test_transformer_uses_rope_and_swiglu_blocks():
+    cfg = ModelConfig(vocab_size=300, block_size=16, n_layer=1, n_head=2, n_embd=32, dropout=0.0)
+    model = GPT(cfg)
+    assert model.blocks[0].mlp.__class__.__name__ == "SwiGLU"
+    assert model.blocks[0].attn.__class__.__name__ == "CausalSelfAttention"
+    assert model.num_parameters() > 0

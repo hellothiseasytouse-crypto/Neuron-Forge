@@ -14,6 +14,149 @@
   let conversationHistory = [];
   let sending = false;
 
+  const STORAGE_KEY = "neuronforge.workspace.v2";
+  const MAX_SAVED_CHATS = 12;
+  let workspace = loadWorkspace();
+
+  function loadWorkspace() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (saved && saved.version === 2 && Array.isArray(saved.chats)) {
+        return {
+          version: 2,
+          chats: saved.chats.filter((chat) => chat && typeof chat.id === "string" && Array.isArray(chat.messages)),
+          activeChatId: typeof saved.activeChatId === "string" ? saved.activeChatId : null
+        };
+      }
+    } catch (_) {
+      // Corrupt or disabled local storage should never prevent the chat UI from starting.
+    }
+    return { version: 2, chats: [], activeChatId: null };
+  }
+
+  function persistWorkspace() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace));
+      return true;
+    } catch (_) {
+      const status = $("#sidebar-status-detail");
+      if (status) status.textContent = "Browser storage is full or unavailable";
+      return false;
+    }
+  }
+
+  function makeChatId() {
+    return (window.crypto && typeof window.crypto.randomUUID === "function")
+      ? window.crypto.randomUUID()
+      : "chat-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
+  }
+
+  function activeChat() {
+    return workspace.chats.find((chat) => chat.id === workspace.activeChatId) || null;
+  }
+
+  function createChat() {
+    const chat = { id: makeChatId(), title: "New conversation", messages: [], updatedAt: Date.now() };
+    workspace.chats.unshift(chat);
+    workspace.chats = workspace.chats.slice(0, MAX_SAVED_CHATS);
+    workspace.activeChatId = chat.id;
+    conversationHistory = [];
+    messages.innerHTML = welcomeMarkup;
+    bindPromptCards();
+    persistWorkspace();
+    renderSavedChats();
+    return chat;
+  }
+
+  function persistCurrentChat() {
+    let chat = activeChat();
+    if (!chat) chat = createChat();
+    chat.messages = conversationHistory.slice(-40).map((item) => ({
+      role: item.role,
+      content: String(item.content || "").slice(0, 1800)
+    }));
+    const firstUser = chat.messages.find((item) => item.role === "user");
+    if (firstUser) {
+      chat.title = firstUser.content.replace(/\s+/g, " ").trim().slice(0, 52) || "Conversation";
+    }
+    chat.updatedAt = Date.now();
+    workspace.chats.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    workspace.chats = workspace.chats.slice(0, MAX_SAVED_CHATS);
+    persistWorkspace();
+    renderSavedChats();
+  }
+
+  function renderSavedChats() {
+    const host = $("#chat-collection");
+    if (!host) return;
+    host.innerHTML = "";
+    const chats = workspace.chats.filter((chat) => chat.messages && chat.messages.length).slice(0, 8);
+    if (!chats.length) {
+      const empty = document.createElement("div");
+      empty.className = "collection-empty";
+      empty.textContent = "Your conversations will appear here";
+      host.appendChild(empty);
+      return;
+    }
+    chats.forEach((chat) => {
+      const button = document.createElement("button");
+      button.className = "collection-link" + (chat.id === workspace.activeChatId ? " active" : "");
+      button.type = "button";
+      const dot = document.createElement("span");
+      dot.className = "book-dot";
+      const title = document.createElement("span");
+      title.textContent = chat.title || "Conversation";
+      button.append(dot, title);
+      button.title = chat.title || "Conversation";
+      button.addEventListener("click", () => openSavedChat(chat.id));
+      host.appendChild(button);
+    });
+  }
+
+  function openSavedChat(chatId) {
+    const chat = workspace.chats.find((item) => item.id === chatId);
+    if (!chat) return;
+    workspace.activeChatId = chatId;
+    conversationHistory = chat.messages.filter((item) => item && ["user", "assistant"].includes(item.role) && typeof item.content === "string").map((item) => ({ role: item.role, content: item.content }));
+    messages.innerHTML = "";
+    if (!conversationHistory.length) {
+      messages.innerHTML = welcomeMarkup;
+      bindPromptCards();
+    } else {
+      conversationHistory.forEach((item) => addMessage(item.content, item.role));
+    }
+    persistWorkspace();
+    renderSavedChats();
+    switchView("chat");
+  }
+
+  function buildMemoryContext() {
+    const secretPattern = /\b(password|passcode|api[ -]?key|secret|access token|refresh token|credit card|cvv|one[- ]time password|otp)\b/i;
+    const records = [];
+    workspace.chats
+      .filter((chat) => chat.id !== workspace.activeChatId)
+      .sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0))
+      .forEach((chat) => {
+        (chat.messages || []).forEach((item) => {
+          if (!item || !["user", "assistant"].includes(item.role) || typeof item.content !== "string") return;
+          const content = item.content.trim();
+          if (!content || secretPattern.test(content)) return;
+          records.push({ role: item.role, content: content.slice(0, 700) });
+        });
+      });
+    return records.slice(-20);
+  }
+
+  function restoreWorkspace() {
+    const chat = activeChat() || createChat();
+    conversationHistory = (chat.messages || []).filter((item) => item && ["user", "assistant"].includes(item.role) && typeof item.content === "string").map((item) => ({ role: item.role, content: item.content }));
+    if (conversationHistory.length) {
+      messages.innerHTML = "";
+      conversationHistory.forEach((item) => addMessage(item.content, item.role));
+    }
+    renderSavedChats();
+  }
+
   const welcomeMarkup = `
     <div class="welcome-state" id="welcome-state">
       <div class="welcome-orbit"><span class="orbit-dot"></span><span class="orbit-core">N</span><span class="orbit-star">✦</span></div>
@@ -62,6 +205,14 @@
   function clearConversation() {
     messages.innerHTML = welcomeMarkup;
     conversationHistory = [];
+    const chat = activeChat();
+    if (chat) {
+      chat.messages = [];
+      chat.title = "New conversation";
+      chat.updatedAt = Date.now();
+    }
+    persistWorkspace();
+    renderSavedChats();
     bindPromptCards();
     input.value = "";
     updateCount();
@@ -83,7 +234,7 @@
     sending = true;
     addMessage(prompt, "user");
     conversationHistory.push({ role: "user", content: prompt });
-    conversationHistory = conversationHistory.slice(-10);
+    persistCurrentChat();
     input.value = "";
     updateCount();
     sendButton.disabled = true;
@@ -92,7 +243,11 @@
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, messages: conversationHistory }),
+        body: JSON.stringify({
+          prompt,
+          messages: conversationHistory.slice(-18).map((item) => ({ role: item.role, content: item.content.slice(0, 1500) })),
+          memories: buildMemoryContext()
+        }),
         cache: "no-store"
       });
       const data = await response.json();
@@ -100,11 +255,12 @@
       pending.body.textContent = data.text || "I couldn't form an answer to that question.";
       if (data.text) {
         conversationHistory.push({ role: "assistant", content: data.text });
-        conversationHistory = conversationHistory.slice(-10);
+        persistCurrentChat();
       }
     } catch (error) {
       conversationHistory.pop();
-      pending.body.textContent = "I couldn't reach the AI model: " + error.message;
+      persistCurrentChat();
+      pending.body.textContent = "I couldn't reach the local assistant: " + error.message;
       pending.node.classList.add("error");
     } finally {
       sending = false;
@@ -215,7 +371,10 @@
   $("#mobile-scrim").addEventListener("click", () => shell.classList.remove("sidebar-open"));
   $("#new-chat").addEventListener("click", () => {
     switchView("chat");
-    clearConversation();
+    createChat();
+    input.value = "";
+    updateCount();
+    input.focus();
   });
   $("#clear-chat").addEventListener("click", clearConversation);
   composer.addEventListener("submit", (event) => {
@@ -239,6 +398,7 @@
     if (event.key === "Escape") shell.classList.remove("sidebar-open");
   });
 
+  restoreWorkspace();
   bindPromptCards();
   loadLibrary();
 })();

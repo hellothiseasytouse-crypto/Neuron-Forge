@@ -10,7 +10,7 @@ tokenizer:
   min_frequency: 2
   max_train_chars: 2000000
 train:
-  data_path: data/processed/corpus.txt
+  data_path: data/processed/shakespeare_corpus.txt
   batch_size: 16
   max_steps: 5000
   learning_rate: 0.0003

@@ -79,3 +79,25 @@ def test_can_swear_request_is_supported(tmp_path):
     engine = make_engine(tmp_path)
     answer = engine.respond([{"role": "user", "content": "Can you swear?"}])
     assert "fuck" in answer.lower()
+
+
+
+def test_cross_chat_memory_remembers_user_name(tmp_path):
+    engine = make_engine(tmp_path)
+    messages = [{"role": "user", "content": "Do you remember my name?"}]
+    memories = [{"role": "user", "content": "My name is Alex"}]
+    answer = engine.respond(messages, memories=memories)
+    assert "Alex" in answer
+    assert "stored on this device" in answer
+
+
+def test_cross_chat_memory_recalls_previous_topic(tmp_path):
+    engine = make_engine(tmp_path)
+    messages = [{"role": "user", "content": "Continue where we left off"}]
+    memories = [
+        {"role": "user", "content": "I am building a project called Eclipse."},
+        {"role": "assistant", "content": "We were planning its story and gameplay."},
+    ]
+    answer = engine.respond(messages, memories=memories)
+    assert "Eclipse" in answer
+    assert "context" in answer.lower()

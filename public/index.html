@@ -49,7 +49,13 @@
         </button>
       </nav>
 
-      <div class="sidebar-section-label collection-label">COLLECTION</div>
+      <div class="sidebar-section-label">RECENT CHATS</div>
+      <div class="sidebar-collection" id="chat-collection">
+        <div class="collection-skeleton"></div>
+        <div class="collection-skeleton short"></div>
+      </div>
+
+      <div class="sidebar-section-label collection-label">REFERENCE COLLECTION</div>
       <div class="sidebar-collection" id="sidebar-collection">
         <div class="collection-skeleton"></div>
         <div class="collection-skeleton short"></div>
@@ -88,7 +94,7 @@
           <div class="intro-block">
             <div class="intro-kicker"><span class="kicker-line"></span> THE SHAKESPEARE COLLECTION <span class="kicker-line"></span></div>
             <h1>Think beyond <em>the text.</em></h1>
-            <p class="intro-description">Talk with Neuron Forge locally. It can handle basic conversation, simple calculations, and questions about its local reference material while its from-scratch language model is being trained.</p>
+            <p class="intro-description">Talk with Neuron Forge locally. Conversations are saved in this browser so it can return to earlier chats and use relevant context in new ones. Its from-scratch Transformer is a separate research model that can be trained as the project grows.</p>
             <div class="description-credit">
               <span class="credit-rule"></span>
               <span>Created by - Smiling cat lab's</span>
@@ -126,7 +132,7 @@
             </form>
           </div>
 
-          <p class="quiet-note">Runs through a local conversation engine. No hosted language model or external AI API is called.</p>
+          <p class="quiet-note">Offline assistant · chats saved in this browser · no third-party model provider</p>
         </div>
       </section>
 
@@ -144,7 +150,7 @@
           <div class="about-card">
             <div class="about-card-mark">N</div>
             <h2>An offline FAI-centered conversation prototype</h2>
-            <p>This version answers through a local conversation engine. It does not connect to Vercel AI Gateway or call an external AI API. The original Dying Ember source document is stored in the repository and is treated as the authority for the four FAI systems.</p>
+            <p>This version answers through a local conversation engine. It does not connect to Vercel AI Gateway or call an external AI API. The original Dying Ember source document is stored in the repository and is treated as the authority for the four FAI systems. Conversation history is stored in this browser's local storage and is not synced across devices. Relevant excerpts are sent to this project's own offline endpoint with each request; no third-party model provider is used.</p>
             <p>The repository also contains a from-scratch GPT-style Transformer and training pipeline, but no trained general-purpose checkpoint is available yet. Until that model is trained, this offline prototype supports basic conversation, simple arithmetic, source-grounded answers about Dying Ember, and searches of the local Shakespeare collection. It does not pretend to have broad intelligence it has not learned.</p>
             <div class="description-credit about-credit"><span class="credit-rule"></span><span>Created by - Smiling cat lab's</span></div>
           </div>

@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from neuronforge_engine.offline_chat import FAI_SYSTEMS, LocalConversationEngine  # noqa: E402
+from neuronforge_engine.memory import normalize_memory_entries  # noqa: E402
 from neuronforge_engine.web_runtime import load_web_model  # noqa: E402
 
 SOURCE_DOCUMENT = ROOT / "docs" / "FAI_SOURCE_DYING_EMBER.txt"
@@ -70,7 +71,7 @@ def normalize_messages(payload: dict) -> list[dict[str, str]]:
 
     cleaned: list[dict[str, str]] = []
     total_chars = 0
-    for item in raw[-10:]:
+    for item in raw[-24:]:
         if not isinstance(item, dict):
             continue
         role = item.get("role")
@@ -80,8 +81,8 @@ def normalize_messages(payload: dict) -> list[dict[str, str]]:
         content = content.strip()
         if not content:
             continue
-        content = content[:2500]
-        if total_chars + len(content) > 12000:
+        content = content[:2000]
+        if total_chars + len(content) > 28000:
             break
         cleaned.append({"role": role, "content": content})
         total_chars += len(content)
@@ -100,11 +101,13 @@ class handler(BaseHTTPRequestHandler):
             details = get_corpus().describe()
             details.update({
                 "assistant_ready": True,
-                "assistant_model": "Neuron Forge · Offline FAI conversation prototype",
+                "assistant_model": "Neuron Forge · Offline assistant with local conversation memory",
                 "ai_mode": "offline",
                 "external_ai_api": False,
                 "fai_source_loaded": bool(engine.source_text),
                 "fai_systems": [name for name, _ in FAI_SYSTEMS],
+                "conversation_memory": "browser-local; sent only as bounded context with chat requests",
+                "neural_model": "training stack available; no trained checkpoint loaded by the hosted chat runtime",
             })
             send_json(self, 200, {"ok": True, **details})
         except Exception as exc:
@@ -130,6 +133,7 @@ class handler(BaseHTTPRequestHandler):
             if not isinstance(payload, dict):
                 raise ValueError("JSON body must be an object")
             messages = normalize_messages(payload)
+            memories = normalize_memory_entries(payload.get("memories"))
         except (json.JSONDecodeError, TypeError, ValueError) as exc:
             return send_json(self, 400, {"error": str(exc)})
 
@@ -137,7 +141,7 @@ class handler(BaseHTTPRequestHandler):
             latest_user = next(item["content"] for item in reversed(messages) if item["role"] == "user")
             corpus = get_corpus()
             passages = corpus.search(latest_user, limit=2) if should_search_shakespeare(latest_user, corpus) else []
-            answer = get_engine().respond(messages, passages)
+            answer = get_engine().respond(messages, passages, memories)
             send_json(self, 200, {
                 "text": answer,
                 "model": "offline-fai-conversation",

@@ -11,6 +11,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .memory import select_relevant_memories
+
 _OPERATORS = {
     ast.Add: operator.add,
     ast.Sub: operator.sub,
@@ -134,23 +136,56 @@ class LocalConversationEngine:
         return next((m["content"] for m in reversed(messages) if m["role"] == "user"), "")
 
     @staticmethod
-    def _name_from_history(messages: list[dict[str, str]]) -> str | None:
-        for item in reversed(messages):
-            if item["role"] != "user":
+    def _name_from_history(messages: list[dict[str, str]],
+                           memories: list[dict[str, str]] | None = None) -> str | None:
+        records = list(memories or []) + list(messages)
+        for item in reversed(records):
+            if item.get("role") != "user":
                 continue
-            match = re.search(r"\b(?:my name is|call me)\s+([A-Za-z][A-Za-z0-9_-]{0,30})", item["content"], re.I)
+            match = re.search(
+                r"\b(?:my name is|call me)\s+([A-Za-z][A-Za-z0-9_-]{0,30})",
+                item.get("content", ""), re.I,
+            )
             if match:
                 return match.group(1)
         return None
 
-    def respond(self, messages: list[dict[str, str]], passages: list[dict[str, Any]] | None = None) -> str:
+    def respond(self, messages: list[dict[str, str]], passages: list[dict[str, Any]] | None = None,
+                memories: list[dict[str, str]] | None = None) -> str:
         message = self._last_user(messages).strip()
         lowered = message.lower().strip()
+        relevant_memories = select_relevant_memories(message, memories or [], limit=6)
         mood = self.conversation_signals.detect(message)
         tone = self.chat_tone.respond(message, mood)
 
         if not message:
             return "Send me a message and we can start."
+
+        recall_pattern = r"\b(?:what did i say|what did you say|what were we talking about|what did we discuss|where did we leave off|continue where we left off|pick up where we left off|what do you remember about me)\b"
+        if re.search(recall_pattern, lowered):
+            name = self._name_from_history(messages[:-1], memories)
+            if name and re.search(r"\b(?:my name|name is)\b", lowered):
+                return f"You previously told me to call you {name}. I found that in the conversation history stored on this device."
+            records = list(memories or []) + messages[:-1]
+            recalled = select_relevant_memories(message, records, limit=8)
+            if recalled:
+                lines = [f"{item['role'].title()}: {item['content'][:420]}" for item in recalled[-6:]]
+                return "Here is the context I can retrieve from your saved conversations on this device:\n\n" + "\n".join(lines)
+            return "I couldn't find an earlier message matching that request in the conversations saved on this device."
+
+        if len(message.split()) <= 8 and re.search(
+            r"\b(?:continue|do it|make it better|make it stronger|that project|the project|same thing|go on|keep going)\b",
+            lowered,
+        ):
+            records = list(memories or []) + messages[:-1]
+            context = select_relevant_memories(message, records, limit=5)
+            if context:
+                lines = [f"{item['role'].title()}: {item['content'][:320]}" for item in context[-4:]]
+                return (
+                    "I found the earlier context:\n\n" + "\n".join(lines)
+                    + "\n\nI can carry this context forward. The hosted chat is still a local conversation engine; "
+                    "the separately trainable Transformer does not have a trained general-purpose checkpoint loaded yet."
+                )
 
         if re.search(r"\bwho is fai\b|\bsubject identity\b", lowered):
             return (
@@ -188,16 +223,16 @@ class LocalConversationEngine:
             )
 
         if re.search(r"\b(?:what did i say|what was my name|do you remember my name)\b", lowered):
-            name = self._name_from_history(messages[:-1])
+            name = self._name_from_history(messages[:-1], memories)
             if name:
-                return f"You told me to call you {name} earlier in this conversation."
+                return f"You previously told me to call you {name}. I found that detail in the conversations stored on this device."
             earlier = [m["content"] for m in messages[:-1] if m["role"] == "user"]
             if earlier:
                 return "Earlier in this chat, you said: " + earlier[-1][:350]
             return "I don't have an earlier message to refer to in this conversation yet."
 
         if re.match(r"^(?:my name is|call me)\s+", lowered):
-            name = self._name_from_history(messages)
+            name = self._name_from_history(messages, memories)
             return f"Got it, {name}. I'll use that name during this conversation."
 
         if re.search(r"\b(?:can you swear|can you curse|use profanity|say a swear)\b", lowered):

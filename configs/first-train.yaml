@@ -1,0 +1,27 @@
+# First real CPU training run from random initialization.
+# This is a small language-model baseline, not a production assistant.
+model:
+  block_size: 96
+  n_layer: 2
+  n_head: 4
+  n_embd: 96
+  dropout: 0.1
+tokenizer:
+  vocab_size: 384
+  min_frequency: 2
+  max_train_chars: 300000
+train:
+  data_path: data/processed/shakespeare_corpus.txt
+  batch_size: 8
+  max_steps: 1000
+  learning_rate: 0.0005
+  min_learning_rate: 0.00005
+  warmup_steps: 40
+  eval_interval: 100
+  eval_batches: 4
+  weight_decay: 0.1
+  grad_clip: 1.0
+  gradient_accumulation_steps: 1
+  checkpoint_path: checkpoints/latest.pt
+  seed: 1337
+  device: cpu

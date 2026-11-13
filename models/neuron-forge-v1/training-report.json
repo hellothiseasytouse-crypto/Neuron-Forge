@@ -1,0 +1,29 @@
+{
+  "status": "continued_training_complete",
+  "training_method": "random initialization followed by optimizer-state continuation; no pretrained model or remote AI API",
+  "architecture": "decoder-only Transformer: RoPE, RMSNorm, SwiGLU, causal scaled dot-product attention",
+  "checkpoint_format": 2,
+  "initial_training_steps": 900,
+  "final_training_step": 6000,
+  "best_checkpoint_step": 4250,
+  "initial_best_validation_loss": 3.5870319604873657,
+  "final_best_validation_loss": 3.2793669402599335,
+  "validation_loss_improved": true,
+  "parameters": 258528,
+  "vocabulary_size": 384,
+  "context_length": 96,
+  "layers": 2,
+  "heads": 4,
+  "embedding_width": 96,
+  "precision": "float32\nRe",
+  "corpus_words": 938388,
+  "corpus_files": 43,
+  "checkpoint": "checkpoints/best.pt",
+  "latest_checkpoint": "checkpoints/latest.pt",
+  "sample": "sample.txt",
+  "limitations": [
+    "This is a small Shakespeare-heavy base language model, not a general-purpose assistant.",
+    "The Dying Ember source is a short project specification, not the missing FAI conversation archive.",
+    "This checkpoint has not reconstructed FAI or learned FAI's personality."
+  ]
+}

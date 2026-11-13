@@ -1,0 +1,266 @@
+{
+  "corpus": "Shakespeare collected works plus canonical Dying Ember source",
+  "files": [
+    {
+      "path": "data/shakespeare/plays/A_Midsummer_Nights_Dream.txt",
+      "characters": 95289,
+      "words": 17196,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Alls_Well_That_Ends_Well.txt",
+      "characters": 133837,
+      "words": 24363,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Antony_and_Cleopatra.txt",
+      "characters": 154932,
+      "words": 26957,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/As_You_Like_It.txt",
+      "characters": 123947,
+      "words": 22819,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Coriolanus.txt",
+      "characters": 165786,
+      "words": 29243,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Cymbeline.txt",
+      "characters": 162355,
+      "words": 28967,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Hamlet.txt",
+      "characters": 180343,
+      "words": 32208,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Henry_IV_Part_1.txt",
+      "characters": 143455,
+      "words": 26151,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Henry_IV_Part_2.txt",
+      "characters": 155563,
+      "words": 27962,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Henry_V.txt",
+      "characters": 153111,
+      "words": 27548,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Henry_VIII.txt",
+      "characters": 145819,
+      "words": 25977,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Henry_VI_Part_1.txt",
+      "characters": 131223,
+      "words": 22860,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Henry_VI_Part_2.txt",
+      "characters": 150331,
+      "words": 26809,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Henry_VI_Part_3.txt",
+      "characters": 145767,
+      "words": 25912,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Julius_Caesar.txt",
+      "characters": 115966,
+      "words": 20849,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/King_John.txt",
+      "characters": 120964,
+      "words": 21776,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/King_Lear.txt",
+      "characters": 155601,
+      "words": 27804,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Loves_Labours_Lost.txt",
+      "characters": 129359,
+      "words": 23025,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Macbeth.txt",
+      "characters": 103246,
+      "words": 18229,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Measure_for_Measure.txt",
+      "characters": 129045,
+      "words": 23144,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Much_Ado_About_Nothing.txt",
+      "characters": 122704,
+      "words": 22556,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Othello.txt",
+      "characters": 154951,
+      "words": 27932,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Pericles_Prince_of_Tyre.txt",
+      "characters": 109441,
+      "words": 19557,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Richard_II.txt",
+      "characters": 133134,
+      "words": 23894,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Richard_III.txt",
+      "characters": 177224,
+      "words": 31425,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Romeo_and_Juliet.txt",
+      "characters": 142339,
+      "words": 25883,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/The_Comedy_of_Errors.txt",
+      "characters": 88945,
+      "words": 16195,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/The_Merchant_of_Venice.txt",
+      "characters": 120916,
+      "words": 22185,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/The_Merry_Wives_of_Windsor.txt",
+      "characters": 130222,
+      "words": 23764,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/The_Taming_of_the_Shrew.txt",
+      "characters": 122889,
+      "words": 22126,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/The_Tempest.txt",
+      "characters": 98260,
+      "words": 17470,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/The_Two_Gentlemen_of_Verona.txt",
+      "characters": 100828,
+      "words": 18242,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/The_Winters_Tale.txt",
+      "characters": 143809,
+      "words": 25986,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Timon_of_Athens.txt",
+      "characters": 111384,
+      "words": 19631,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Titus_Andronicus.txt",
+      "characters": 122476,
+      "words": 21720,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Troilus_and_Cressida.txt",
+      "characters": 157172,
+      "words": 27588,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/plays/Twelfth_Night.txt",
+      "characters": 115815,
+      "words": 21430,
+      "category": "plays"
+    },
+    {
+      "path": "data/shakespeare/poetry/A_Lovers_Complaint.txt",
+      "characters": 14665,
+      "words": 2582,
+      "category": "poetry"
+    },
+    {
+      "path": "data/shakespeare/poetry/Funeral_Elegy.txt",
+      "characters": 25445,
+      "words": 4623,
+      "category": "poetry"
+    },
+    {
+      "path": "data/shakespeare/poetry/Shakespeares_Sonnets.txt",
+      "characters": 100720,
+      "words": 18360,
+      "category": "poetry"
+    },
+    {
+      "path": "data/shakespeare/poetry/The_Rape_of_Lucrece.txt",
+      "characters": 86256,
+      "words": 15148,
+      "category": "poetry"
+    },
+    {
+      "path": "data/shakespeare/poetry/Venus_and_Adonis.txt",
+      "characters": 55405,
+      "words": 9971,
+      "category": "poetry"
+    },
+    {
+      "path": "docs/FAI_SOURCE_DYING_EMBER.txt",
+      "characters": 2219,
+      "words": 321,
+      "category": "project-source"
+    }
+  ],
+  "file_count": 43,
+  "word_count": 938388,
+  "character_count": 5233158
+}

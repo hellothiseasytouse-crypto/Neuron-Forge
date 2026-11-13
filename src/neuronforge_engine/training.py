@@ -82,6 +82,8 @@ def train(config: Config, resume: bool = False) -> Path:
     saved = None
     if resume:
         saved = read_checkpoint(checkpoint_path, device="cpu")
+        if saved.get("format_version") != 2:
+            raise ValueError("This checkpoint predates the current Transformer architecture. Start a new training run instead of resuming it.")
         tokenizer = ByteBPETokenizer.from_state_dict(saved["tokenizer"])
         print(f"Resuming from step {saved.get('step', 0)}")
     else:

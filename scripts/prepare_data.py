@@ -50,7 +50,7 @@ def main() -> None:
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text("\n\n".join(parts) + "\n", encoding="utf-8")
     MANIFEST.write_text(json.dumps({
-        "corpus": "Shakespeare collected works",
+        "corpus": "Shakespeare collected works plus canonical Dying Ember source",
         "files": manifest,
         "file_count": len(manifest),
         "word_count": total_words,

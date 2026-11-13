@@ -161,20 +161,20 @@ class LocalConversationEngine:
         if not message:
             return "Send me a message and we can start."
 
-        recall_pattern = r"\b(?:what did i say|what did you say|what were we talking about|what did we discuss|where did we leave off|continue where we left off|pick up where we left off|what do you remember about me)\\b"
+        recall_pattern = r"\b(?:what did i say|what did you say|what were we talking about|what did we discuss|where did we leave off|continue where we left off|pick up where we left off|what do you remember about me)\b"
         if re.search(recall_pattern, lowered):
             name = self._name_from_history(messages[:-1], memories)
-            if name and re.search(r"\\b(?:my name|name is)\\b", lowered):
+            if name and re.search(r"\b(?:my name|name is)\b", lowered):
                 return f"You previously told me to call you {name}. I found that in the conversation history stored on this device."
             records = list(memories or []) + messages[:-1]
             recalled = select_relevant_memories(message, records, limit=8)
             if recalled:
                 lines = [f"{item['role'].title()}: {item['content'][:420]}" for item in recalled[-6:]]
-                return "Here is the context I can retrieve from your saved conversations on this device:\n\\n" + "\\n".join(lines)
+                return "Here is the context I can retrieve from your saved conversations on this device:\n\n" + "\n".join(lines)
             return "I couldn't find an earlier message matching that request in the conversations saved on this device."
 
         if len(message.split()) <= 8 and re.search(
-            r"\b(?:continue|do it|make it better|make it stronger|that project|the project|same thing|go on|keep going)\\b",
+            r"\b(?:continue|do it|make it better|make it stronger|that project|the project|same thing|go on|keep going)\b",
             lowered,
         ):
             records = list(memories or []) + messages[:-1]
@@ -182,8 +182,8 @@ class LocalConversationEngine:
             if context:
                 lines = [f"{item['role'].title()}: {item['content'][:320]}" for item in context[-4:]]
                 return (
-                    "I found the earlier context:\\n\\n" + "\\n".join(lines)
-                    + "\\n\\nI can carry this context forward. The hosted chat is still a local conversation engine; "
+                    "I found the earlier context:\n\n" + "\n".join(lines)
+                    + "\n\nI can carry this context forward. The hosted chat is still a local conversation engine; "
                     "the separately trainable Transformer does not have a trained general-purpose checkpoint loaded yet."
                 )
 

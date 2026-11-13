@@ -1,0 +1,14 @@
+# No external chat corpus is silently enabled. Supply a reviewed local JSONL file.
+format: jsonl
+required_schema:
+  messages:
+    - role: system|user|assistant
+      content: non-empty string
+review_requirements:
+  - Verify dataset license permits model training and intended distribution.
+  - Record dataset name, version, license, attribution, source URL and review date.
+  - Exclude personal data, private conversations, credentials and confidential material.
+  - Filter spam, duplicates, unsafe content and low-quality answers.
+  - Keep a held-out validation split and do not tune on evaluation examples.
+  - Use only conversations the project owner has permission to use.
+starter_policy: "Provide locally reviewed JSONL; do not auto-download unreviewed chat data."

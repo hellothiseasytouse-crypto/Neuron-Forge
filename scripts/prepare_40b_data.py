@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Iterator
@@ -48,6 +49,7 @@ def stream_sources(config: dict, raw_path: Path, max_documents: int) -> tuple[in
         raise ValueError("No enabled data sources were found in the source manifest.")
 
     document_count = 0
+    seen_content: set[str] = set()
     source_reports: list[dict] = []
     with raw_path.open("w", encoding="utf-8") as output:
         for source in sources:
@@ -70,10 +72,17 @@ def stream_sources(config: dict, raw_path: Path, max_documents: int) -> tuple[in
                 if not isinstance(text, str):
                     skipped += 1
                     continue
-                text = text.strip()
+                text = re.sub(r"\\s+", " ", text).strip()
                 if len(text) < int(config.get("minimum_document_characters", 300)):
                     skipped += 1
                     continue
+                # Exact normalized-content deduplication prevents repeated documents
+                # from leaking across train/validation splits.
+                digest = hashlib.sha256(text.casefold().encode("utf-8")).hexdigest()
+                if digest in seen_content:
+                    skipped += 1
+                    continue
+                seen_content.add(digest)
                 title = row.get(source.get("title_field", "title"), "")
                 url = row.get(source.get("url_field", "url"), "")
                 record = {
@@ -97,7 +106,7 @@ def stream_sources(config: dict, raw_path: Path, max_documents: int) -> tuple[in
                 "attribution": source.get("attribution", ""),
                 "dataset_card": source.get("dataset_card", ""),
                 "accepted_documents": accepted,
-                "skipped_documents": skipped,
+                "skipped_documents": skipped,\n                "deduplication": "exact normalized text SHA-256",
             })
             if max_documents and document_count >= max_documents:
                 break

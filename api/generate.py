@@ -13,11 +13,15 @@ sys.path.insert(0, str(ROOT / "src"))
 from neuronforge_engine.offline_chat import FAI_SYSTEMS, LocalConversationEngine  # noqa: E402
 from neuronforge_engine.memory import normalize_memory_entries  # noqa: E402
 from neuronforge_engine.web_runtime import load_web_model  # noqa: E402
+from neuronforge_engine.numpy_inference import NumpyNeuronForge  # noqa: E402
 
 SOURCE_DOCUMENT = ROOT / "docs" / "FAI_SOURCE_DYING_EMBER.txt"
 CORPUS_INDEX = ROOT / "public" / "shakespeare_index.json"
+NEURAL_MODEL_DIR = ROOT / "models" / "neuron-forge-1m"
 _engine = None
 _corpus = None
+_neural_model = None
+_neural_model_checked = False
 
 
 def get_engine() -> LocalConversationEngine:
@@ -32,6 +36,37 @@ def get_corpus():
     if _corpus is None:
         _corpus = load_web_model(CORPUS_INDEX)
     return _corpus
+
+
+def get_neural_model():
+    """Load the exported NumPy checkpoint once per warm serverless instance."""
+    global _neural_model, _neural_model_checked
+    if _neural_model_checked:
+        return _neural_model
+    _neural_model_checked = True
+    runtime_weights = NEURAL_MODEL_DIR / "runtime.npz"
+    runtime_metadata = NEURAL_MODEL_DIR / "runtime.json"
+    if not runtime_weights.is_file() or not runtime_metadata.is_file():
+        print("Neuron Forge neural checkpoint export is missing", flush=True)
+        return None
+    try:
+        _neural_model = NumpyNeuronForge(NEURAL_MODEL_DIR)
+        print(
+            f"Loaded Neuron Forge neural checkpoint: 1,041,000 parameters "
+            f"(step {_neural_model.checkpoint_step})",
+            flush=True,
+        )
+    except Exception as exc:
+        print(f"Neuron Forge neural checkpoint failed to load: {type(exc).__name__}", flush=True)
+        _neural_model = None
+    return _neural_model
+
+
+def is_general_fallback(answer: str) -> bool:
+    return answer.startswith((
+        "I can follow what you're saying, but I don't have a trained general-purpose",
+        "I'm here. I can chat, keep track of what you've said",
+    ))
 
 
 def send_json(handler, status: int, payload: dict):
@@ -99,15 +134,22 @@ class handler(BaseHTTPRequestHandler):
         try:
             engine = get_engine()
             details = get_corpus().describe()
+            neural = get_neural_model()
             details.update({
                 "assistant_ready": True,
-                "assistant_model": "Neuron Forge · Offline assistant with local conversation memory",
-                "ai_mode": "offline",
+                "assistant_model": "Neuron Forge · 1M experimental neural model + local conversation memory",
+                "ai_mode": "hybrid-offline",
                 "external_ai_api": False,
                 "fai_source_loaded": bool(engine.source_text),
                 "fai_systems": [name for name, _ in FAI_SYSTEMS],
                 "conversation_memory": "browser-local; sent only as bounded context with chat requests",
-                "neural_model": "training stack available; no trained checkpoint loaded by the hosted chat runtime",
+                "neural_model": {
+                    "loaded": neural is not None,
+                    "name": "Neuron Forge 1M",
+                    "parameters": 1041000,
+                    "checkpoint_step": neural.checkpoint_step if neural is not None else None,
+                    "role": "experimental generation for open-ended prompts; deterministic local handlers protect FAI source and memory paths",
+                },
             })
             send_json(self, 200, {"ok": True, **details})
         except Exception as exc:
@@ -142,11 +184,25 @@ class handler(BaseHTTPRequestHandler):
             corpus = get_corpus()
             passages = corpus.search(latest_user, limit=2) if should_search_shakespeare(latest_user, corpus) else []
             answer = get_engine().respond(messages, passages, memories)
+            used_neural = False
+            if is_general_fallback(answer):
+                neural = get_neural_model()
+                if neural is not None:
+                    try:
+                        generated = neural.generate(latest_user[:700], max_new_tokens=48)
+                        completion = generated[len(latest_user[:700]):].strip() if generated.startswith(latest_user[:700]) else generated.strip()
+                        if completion:
+                            answer = completion
+                            used_neural = True
+                    except Exception as neural_exc:
+                        print(f"Neuron Forge neural generation failed: {type(neural_exc).__name__}", flush=True)
             send_json(self, 200, {
                 "text": answer,
-                "model": "offline-fai-conversation",
+                "model": "neuron-forge-1m" if used_neural else "offline-fai-conversation",
+                "model_label": "NEURON FORGE · 1M EXPERIMENTAL" if used_neural else "NEURON FORGE · LOCAL",
+                "neural_experimental": used_neural,
                 "assistant": "Neuron Forge",
-                "mode": "offline",
+                "mode": "neural-experimental" if used_neural else "offline",
                 "external_api_used": False,
             })
         except Exception as exc:

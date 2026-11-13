@@ -6,13 +6,13 @@ The repository now contains a 250M-class decoder-only Transformer configuration.
 
 | Setting | Value |
 | --- | ---: |
-| Exact trainable parameters | 249,970,240 |
-| Transformer layers | 30 |
+| Exact trainable parameters | 248,144,832 |
+| Transformer layers | 29 |
 | Attention heads | 16 |
 | Embedding width | 832 |
 | Per-head width | 52 |
 | Context length | 1,024 tokens |
-| Vocabulary | 384 |
+| Vocabulary | 8,192 |
 | SwiGLU hidden width | 2,224 |
 | Position encoding | RoPE |
 | Normalization | RMSNorm |

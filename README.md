@@ -1,12 +1,12 @@
 # Neuron Forge
 
-**An offline AI research project organized around the original Project Dying Ember FAI source document.** Neuron Forge contains a from-scratch decoder-only Transformer, byte-level BPE tokenizer, training loop, checkpoint tools, a local conversation prototype, and a local Shakespeare text library.
+**An offline AI research project organized around the original Project Dying Ember FAI source document.** Neuron Forge contains a from-scratch decoder-only Transformer using RoPE, RMSNorm, SwiGLU, and scaled dot-product attention; a byte-level BPE tokenizer; CUDA mixed-precision training; checkpoint tools; browser-local conversation history; and a local Shakespeare reference library.
 
 ## Hosted website
 
 Open **[Neuron Forge](https://neuron-forge-cyber-0ab0.vercel.app)**.
 
-The chat endpoint does not call Vercel AI Gateway or any external language-model API. It uses the Python offline conversation runtime in `src/neuronforge_engine/offline_chat.py`. The current runtime supports basic conversation, in-session recall, safe arithmetic, source-grounded answers about the Dying Ember document, and local Shakespeare passage lookup.
+The chat endpoint uses the Python offline conversation runtime in `src/neuronforge_engine/offline_chat.py`; it does not call Vercel AI Gateway or a third-party language-model provider. The website stores recent conversations in the browser and sends bounded, relevant excerpts to its own `/api/generate` endpoint for cross-chat continuity. The runtime supports basic conversation, saved-chat recall, safe arithmetic, source-grounded answers about the Dying Ember document, and local Shakespeare passage lookup.
 
 **Important distinction:** this offline runtime is a working conversational prototype, not a trained general-purpose neural language model. It does not have broad world knowledge or reliable open-ended reasoning. The from-scratch Transformer implementation is separate and still needs a suitable training corpus, sufficient compute, training, and evaluation before it can replace the prototype.
 
@@ -30,12 +30,12 @@ Together, the source identifies the final reconstruction as `FAI-AI`. The runtim
 - Offline conversation endpoint with no remote model/API dependency.
 - FAI source document preserved verbatim.
 - Four explicit FAI-system boundaries in the offline runtime.
-- In-session conversation history handling.
+- Conversation history saved in the browser (up to 12 chats) with cross-chat context retrieval.\n- Bounded memory sanitization and lexical relevance ranking; obvious credential-bearing memory snippets are excluded from cross-chat context.
 - Safe, constrained arithmetic parsing (no `eval`).
 - Local Shakespeare corpus retrieval as optional reference material.
 - Byte-level BPE tokenizer with a 256-byte base vocabulary and learned merges.
-- GPT-style causal Transformer with multi-head self-attention, MLP blocks, residual connections, and tied embeddings.
-- Training from random initialization using AdamW, warmup/cosine learning-rate scheduling, gradient accumulation, clipping, validation loss, and checkpoints.
+- Decoder-only Transformer with RoPE, RMSNorm, SwiGLU feed-forward blocks, scaled dot-product attention, residual connections, and tied token embeddings.
+- Training from random initialization using AdamW, warmup/cosine learning-rate scheduling, gradient accumulation, clipping, validation loss, checkpoints, and automatic CUDA mixed precision when supported.
 - CLI for training, generation, terminal chat, and local serving.
 - Tests and GitHub Actions CI.
 
@@ -75,12 +75,12 @@ Open `http://127.0.0.1:8000`. The server binds to localhost by default. Do not e
 
 ```text
 src/neuronforge_engine/
-  offline_chat.py                 # local dialogue routing and FAI source boundaries
+  offline_chat.py                 # local dialogue routing and FAI source boundaries\n  memory.py                       # bounded cross-chat memory ranking and sanitization
   config.py                       # model and training configuration
   tokenizer.py                    # byte-level BPE
   data.py                         # corpus encoding and batch sampling
-  model.py                         # causal GPT-style Transformer
-  training.py                     # optimization, evaluation and checkpointing
+  model.py                         # RoPE + RMSNorm + SwiGLU Transformer
+  training.py                     # AdamW, mixed precision, evaluation and checkpointing
   generation.py                   # sampling and text generation
   checkpoint.py                   # checkpoint serialization and restore
   web_runtime.py                  # local Shakespeare passage search
@@ -93,6 +93,6 @@ public/                            # website UI, icon, styles, and browser scrip
 
 ## Current limitations
 
-The current website runtime is intentionally honest about its limits: it can handle common chat patterns and supported local tasks, but it is not yet a broad general-purpose AI. The GPT model is initialized from random weights and no trained conversational checkpoint is included. A capable from-scratch model requires a large, diverse, legally usable dataset, substantial accelerator compute, evaluation, and safety work.
+The hosted chat runtime is still deterministic and limited; the upgraded Transformer is not wired into the hosted endpoint because there is no trained checkpoint and the hosted Python function intentionally does not bundle PyTorch. Training starts from random weights. The bundled Shakespeare corpus and short FAI source document are useful for pipeline testing and source familiarity, not enough to produce a capable general-purpose assistant. A strong from-scratch model requires a much larger, diverse, legally usable corpus, substantial accelerator compute, instruction training, robust evaluation, and safety work. Browser memory is stored locally, but selected excerpts are sent to the project's own endpoint when a response is requested; it is not synced across devices.
 
 The Dying Ember source warns that messages may be incomplete, joking, false, exaggerated, or contradictory. Reconstruction claims must remain tied to actual evidence. The original document is preserved as-is; any future archive ingestion should add evidence without modifying that source.

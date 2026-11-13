@@ -1,0 +1,165 @@
+name: Train and commit Neuron Forge 1M model
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/train-1m-model.yml"
+      - "configs/one-million.yaml"
+      - "src/neuronforge_engine/**"
+      - "scripts/prepare_data.py"
+      - "docs/FAI_SOURCE_DYING_EMBER.txt"
+      - "data/shakespeare/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: neuron-forge-one-million-training
+  cancel-in-progress: false
+
+jobs:
+  train-and-commit:
+    name: Train 1M-parameter Transformer from scratch
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OMP_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+      TOKENIZERS_PARALLELISM: "false"
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install CPU-only PyTorch and project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install PyYAML pytest
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e . --no-deps
+
+      - name: Verify code and architecture tests
+        run: pytest -q
+
+      - name: Verify model is at least one million parameters
+        run: |
+          python - <<'PY'
+          from neuronforge_engine.config import load_config
+          from neuronforge_engine.model import GPT
+          cfg = load_config("configs/one-million.yaml")
+          model = GPT(cfg.model)
+          count = model.num_parameters()
+          print(f"Trainable parameters: {count:,}")
+          assert count >= 1_000_000, f"Expected >= 1,000,000 parameters, got {count}"
+          PY
+
+      - name: Prepare the training corpus
+        run: python scripts/prepare_data.py
+
+      - name: Train the 1M model from random initialization
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p checkpoints
+          neuronforge train --config configs/one-million.yaml 2>&1 | tee training.log
+
+      - name: Generate sample from the best checkpoint
+        run: |
+          neuronforge generate \
+            --checkpoint checkpoints/best.pt \
+            --prompt "To be, or not to be:" \
+            --max-new-tokens 160 \
+            --temperature 0.8 \
+            --top-k 40 \
+            --top-p 0.95 \
+            --device cpu > sample.txt
+          cat sample.txt
+
+      - name: Verify checkpoint and write model report
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+          from neuronforge_engine.checkpoint import read_checkpoint
+          from neuronforge_engine.config import ModelConfig
+          from neuronforge_engine.model import GPT
+
+          best = read_checkpoint("checkpoints/best.pt", device="cpu")
+          latest = read_checkpoint("checkpoints/latest.pt", device="cpu")
+          cfg = ModelConfig(**best["model_config"])
+          model = GPT(cfg)
+          model.load_state_dict(best["model_state"])
+          parameters = model.num_parameters()
+          assert parameters >= 1_000_000, f"Checkpoint has only {parameters} parameters"
+          log = Path("training.log").read_text(encoding="utf-8")
+          precision = re.search(r"precision: ([^\\s]+)", log)
+          manifest = json.loads(Path("data/processed/manifest.json").read_text(encoding="utf-8"))
+          report = {
+              "status": "trained_and_verified",
+              "training_method": "fresh random initialization; no pretrained weights and no hosted AI API",
+              "architecture": "decoder-only Transformer with RoPE, RMSNorm, SwiGLU and causal scaled dot-product attention",
+              "parameters": parameters,
+              "initialization": "random",
+              "training_steps": latest["step"],
+              "best_checkpoint_step": best["step"],
+              "best_validation_loss": best["best_val_loss"],
+              "vocabulary_size": cfg.vocab_size,
+              "context_length": cfg.block_size,
+              "layers": cfg.n_layer,
+              "heads": cfg.n_head,
+              "embedding_width": cfg.n_embd,
+              "precision": precision.group(1) if precision else "see training.log",
+              "training_device": "CPU",
+              "corpus_words": manifest["word_count"],
+              "corpus_files": manifest["file_count"],
+              "checkpoints": ["best.pt", "latest.pt"],
+              "limitations": [
+                  "This is an experimental base language model, not a ChatGPT-level general assistant.",
+                  "The training corpus remains Shakespeare-heavy plus the short Dying Ember source document.",
+                  "The Dying Ember document is not the missing FAI conversation archive.",
+                  "The checkpoint is not automatically loaded by the live website chat runtime."
+              ]
+          }
+          Path("training-report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+          print(json.dumps(report, indent=2))
+          PY
+
+      - name: Stage trained model inside repository
+        run: |
+          mkdir -p models/neuron-forge-1m
+          cp checkpoints/best.pt models/neuron-forge-1m/best.pt
+          cp checkpoints/latest.pt models/neuron-forge-1m/latest.pt
+          cp training-report.json models/neuron-forge-1m/training-report.json
+          cp training.log models/neuron-forge-1m/training.log
+          cp sample.txt models/neuron-forge-1m/sample.txt
+          cp data/processed/manifest.json models/neuron-forge-1m/corpus-manifest.json
+          ls -lh models/neuron-forge-1m
+
+      - name: Commit trained 1M checkpoint to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add models/neuron-forge-1m
+          git commit -m "Add trained 1M-parameter Neuron Forge model"
+          git push origin HEAD:main
+
+      - name: Upload a copy of the trained model artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: neuron-forge-one-million-parameter-model
+          path: |
+            models/neuron-forge-1m/**
+          if-no-files-found: error
+          retention-days: 30

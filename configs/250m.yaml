@@ -3,12 +3,12 @@
 # text corpus. It is not suitable for the CPU-only GitHub hosted runner.
 model:
   block_size: 1024
-  n_layer: 30
+  n_layer: 29
   n_head: 16
   n_embd: 832
   dropout: 0.05
 tokenizer:
-  vocab_size: 384
+  vocab_size: 8192
   min_frequency: 2
   max_train_chars: 100000000
 train:

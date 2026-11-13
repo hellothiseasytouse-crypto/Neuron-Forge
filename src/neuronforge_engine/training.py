@@ -77,7 +77,9 @@ def train(config: Config, resume: bool = False) -> Path:
     precision_label = "bfloat16" if use_amp and amp_dtype == torch.bfloat16 else ("float16" if use_amp else "float32")
     print(f"Neuron Forge training device: {device} | precision: {precision_label}")
 
+    print(f'Loading training corpus: {config.train.data_path}', flush=True)
     text = load_text(config.train.data_path)
+    print(f'Corpus loaded: {len(text):,} characters', flush=True)
     checkpoint_path = Path(config.train.checkpoint_path)
     saved = None
     if resume:
@@ -87,6 +89,7 @@ def train(config: Config, resume: bool = False) -> Path:
         tokenizer = ByteBPETokenizer.from_state_dict(saved["tokenizer"])
         print(f"Resuming from step {saved.get('step', 0)}")
     else:
+        print(f'Training byte-level BPE tokenizer (target vocabulary: {config.tokenizer.vocab_size:,})...', flush=True)
         tokenizer = ByteBPETokenizer.train(
             text,
             vocab_size=config.tokenizer.vocab_size,
@@ -99,7 +102,9 @@ def train(config: Config, resume: bool = False) -> Path:
             "Add more diverse corpus text before training this architecture."
         )
     config.model.vocab_size = tokenizer.vocab_size
+    print('Encoding corpus and creating train/validation split...', flush=True)
     train_data, val_data = encode_and_split(text, tokenizer)
+    print(f'Encoding complete: {len(train_data):,} training tokens, {len(val_data):,} validation tokens', flush=True)
     needed = config.model.block_size + 1
     if len(train_data) <= needed or len(val_data) <= needed:
         raise ValueError(
@@ -107,6 +112,7 @@ def train(config: Config, resume: bool = False) -> Path:
             "Add a larger corpus or lower model.block_size."
         )
 
+    print(f'Initializing {config.model.n_layer}-layer model on {device}...', flush=True)
     model = GPT(config.model).to(device)
     model.gradient_checkpointing = bool(config.train.gradient_checkpointing)
     if model.gradient_checkpointing:

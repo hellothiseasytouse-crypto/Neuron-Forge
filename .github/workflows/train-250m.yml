@@ -16,7 +16,7 @@ jobs:
     # This intentionally requires a GPU runner; it must never fall back to a
     # small CPU GitHub-hosted runner for a job of this size.
     runs-on: [self-hosted, linux, x64, gpu]
-    timeout-minutes: 360
+    timeout-minutes: 2160
     env:
       OMP_NUM_THREADS: "4"
       MKL_NUM_THREADS: "4"

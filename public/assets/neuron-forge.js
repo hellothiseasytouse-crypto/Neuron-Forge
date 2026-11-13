@@ -77,7 +77,7 @@
     }));
     const firstUser = chat.messages.find((item) => item.role === "user");
     if (firstUser) {
-      chat.title = firstUser.content.replace(/\\s+/g, " ").trim().slice(0, 52) || "Conversation";
+      chat.title = firstUser.content.replace(/\s+/g, " ").trim().slice(0, 52) || "Conversation";
     }
     chat.updatedAt = Date.now();
     workspace.chats.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
@@ -131,11 +131,11 @@
   }
 
   function buildMemoryContext() {
-    const secretPattern = /\\b(password|passcode|api[ -]?key|secret|access token|refresh token|credit card|cvv|one[- ]time password|otp)\\b/i;
+    const secretPattern = /\b(password|passcode|api[ -]?key|secret|access token|refresh token|credit card|cvv|one[- ]time password|otp)\b/i;
     const records = [];
     workspace.chats
       .filter((chat) => chat.id !== workspace.activeChatId)
-      .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+      .sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0))
       .forEach((chat) => {
         (chat.messages || []).forEach((item) => {
           if (!item || !["user", "assistant"].includes(item.role) || typeof item.content !== "string") return;

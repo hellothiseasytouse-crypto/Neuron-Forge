@@ -126,7 +126,10 @@ def train(config: Config, resume: bool = False) -> Path:
         optimizer.zero_grad(set_to_none=True)
         for _ in range(config.train.gradient_accumulation_steps):
             x, y = get_batch(train_data, config.model.block_size, config.train.batch_size, device)
-            with torch.autocast(device_type="cuda", dtype=amp_dtype, enabled=use_amp):
+            if use_amp:
+                with torch.autocast(device_type="cuda", dtype=amp_dtype):
+                    _, loss = model(x, y)
+            else:
                 _, loss = model(x, y)
             scaler.scale(loss / config.train.gradient_accumulation_steps).backward()
         scaler.unscale_(optimizer)

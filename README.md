@@ -6,9 +6,9 @@
 
 Open **[Neuron Forge](https://neuron-forge-cyber-0ab0.vercel.app)**.
 
-The chat endpoint uses the Python offline conversation runtime in `src/neuronforge_engine/offline_chat.py`; it does not call Vercel AI Gateway or a third-party language-model provider. The website stores recent conversations in the browser and sends bounded, relevant excerpts to its own `/api/generate` endpoint for cross-chat continuity. The runtime supports basic conversation, saved-chat recall, safe arithmetic, source-grounded answers about the Dying Ember document, and local Shakespeare passage lookup.
+The hosted `/api/generate` endpoint is a hybrid offline runtime. It uses the trained 1,041,000-parameter Transformer through lightweight NumPy CPU inference for open-ended prompts, and preserves deterministic handlers for conversation recall, safe arithmetic, Shakespeare lookup, and source-grounded Dying Ember answers. It does not call Vercel AI Gateway or a third-party model provider. Recent conversation context and selected browser-local memories are sent to the project's own endpoint.
 
-**Important distinction:** the hosted offline runtime is a working conversational prototype, not a trained general-purpose neural language model. A one-million-parameter Transformer has now been trained and committed below, but it is still an experimental base model and is not yet used by the hosted chat endpoint.
+**Important distinction:** the live website now uses the 1M checkpoint for experimental open-ended text generation. The model is a small Shakespeare-heavy base language model, not an instruction-tuned assistant; its output can be incoherent or inaccurate and should not be treated as reliable factual reasoning.
 
 ## FAI source document
 
@@ -35,6 +35,7 @@ Together, the source identifies the final reconstruction as `FAI-AI`. The runtim
 - Safe, constrained arithmetic parsing (no `eval`).
 - Local Shakespeare corpus retrieval as optional reference material.
 - Byte-level BPE tokenizer with a 256-byte base vocabulary and learned merges.
+- NumPy CPU inference runtime for the deployed 1M checkpoint, without bundling PyTorch into the Vercel function.
 - Decoder-only Transformer with RoPE, RMSNorm, SwiGLU feed-forward blocks, scaled dot-product attention, residual connections, and tied token embeddings.
 - Training from random initialization using AdamW, warmup/cosine learning-rate scheduling, gradient accumulation, clipping, validation loss, checkpoints, and automatic CUDA mixed precision when supported.
 - CLI for training, generation, terminal chat, and local serving.
@@ -95,12 +96,14 @@ public/                            # website UI, icon, styles, and browser scrip
 
 ## Trained checkpoints
 
-The new **1,041,000-parameter model** is committed in [`models/neuron-forge-1m/`](models/neuron-forge-1m/). Its configuration, training run, best validation loss, dataset boundaries, and limitations are documented in [`docs/NEURON_FORGE_1M_TRAINING.md`](docs/NEURON_FORGE_1M_TRAINING.md).
+The new **1,041,000-parameter model** is committed in [`models/neuron-forge-1m/`](models/neuron-forge-1m/) and is wired into the live `/api/generate` endpoint for experimental open-ended prompts. Its training and limitations are documented in [`docs/NEURON_FORGE_1M_TRAINING.md`](docs/NEURON_FORGE_1M_TRAINING.md).
+
+A separate **3.02B-parameter architecture blueprint** is recorded in [`configs/3b-architecture.json`](configs/3b-architecture.json) and [`docs/3B_SCALE_PLAN.md`](docs/3B_SCALE_PLAN.md). It has not been trained and has no checkpoint.
 
 The earlier 258,528-parameter baseline and its continuation remain in [`models/neuron-forge-v1/`](models/neuron-forge-v1/). Historical results are recorded in [`docs/TRAINING_RESULTS_2026-11-13.md`](docs/TRAINING_RESULTS_2026-11-13.md).
 
 ## Current limitations
 
-The hosted chat runtime is still deterministic and limited; the trained Transformer checkpoints are not wired into the hosted endpoint, which intentionally does not bundle PyTorch. The current training corpus is Shakespeare-heavy plus the short FAI source document, which is not enough to produce a capable general-purpose assistant. A strong from-scratch model requires a much larger, diverse, legally usable corpus, substantial accelerator compute, instruction training, robust evaluation, and safety work. Browser memory is stored locally, but selected excerpts are sent to the project's own endpoint when a response is requested; it is not synced across devices.
+The live hybrid runtime is still experimental and limited. The 1M model is not instruction-tuned, and the current training corpus is Shakespeare-heavy plus the short FAI source document, which is not enough to produce a capable general-purpose assistant. The 3B architecture is only a blueprint; training it requires distributed/sharded training and dedicated high-memory CUDA hardware, and serving it would require a separate GPU inference service. The Vercel function intentionally bundles NumPy inference rather than PyTorch. A strong from-scratch model requires a much larger, diverse, legally usable corpus, substantial accelerator compute, instruction training, robust evaluation, and safety work. Browser memory is stored locally, but selected excerpts are sent to the project's own endpoint when a response is requested; it is not synced across devices.
 
 The Dying Ember source warns that messages may be incomplete, joking, false, exaggerated, or contradictory. Reconstruction claims must remain tied to actual evidence. The original document is preserved as-is; any future archive ingestion should add evidence without modifying that source.

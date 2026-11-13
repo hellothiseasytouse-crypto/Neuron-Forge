@@ -92,6 +92,11 @@ def restore(model,opt,root):
     dcp.load({"training":TrainingState(model,opt)},checkpoint_id=str(folder)); dist.barrier()
     return int(m["step"]),float(m.get("best_validation_loss",float("inf")))
 
+def append_metric(root: Path, record: dict, rank: int):
+    if rank == 0:
+        with (root / "metrics.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record) + "\n")
+
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--config",type=Path,default=Path("configs/4b-sft.yaml"))
@@ -136,10 +141,14 @@ def main():
             model.clip_grad_norm_(cfg.train.grad_clip); optimizer.step(); done=step+1
             if done==1 or done%10==0:
                 metric=running.float(); dist.all_reduce(metric); metric/=world
-                if rank==0: print(f"SFT step {done}/{steps} | assistant_loss {metric.item():.4f} | lr {lr:.3e}",flush=True)
+                if rank==0:
+                print(f"SFT step {done}/{steps} | assistant_loss {metric.item():.4f} | lr {lr:.3e}",flush=True)
+                append_metric(a.checkpoint_dir,{"stage":"instruction_tuning","step":done,"assistant_train_loss":float(metric.item()),"learning_rate":lr},rank)
             if done%cfg.train.eval_interval==0 or done==steps:
                 val=evaluate(model,vx,vy,cfg,rng,device,world); best=min(best,val)
-                if rank==0: print(f"SFT validation step {done} | loss {val:.4f} | best {best:.4f}",flush=True)
+                if rank==0:
+                    print(f"SFT validation step {done} | loss {val:.4f} | best {best:.4f}",flush=True)
+                    append_metric(a.checkpoint_dir,{"stage":"instruction_tuning","step":done,"validation_loss":val,"best_validation_loss":best},rank)
                 save(model,optimizer,a.checkpoint_dir,done,best,rank)
         if rank==0: print("Instruction tuning finished. Run conversational evaluation before release.",flush=True)
     finally:

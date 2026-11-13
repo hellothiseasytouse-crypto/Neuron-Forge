@@ -1,15 +1,7 @@
 name: Train and commit Neuron Forge 1M model
 
+# Kept for explicit research reruns only. Production changes must not start training.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/train-1m-model.yml"
-      - "configs/one-million.yaml"
-      - "src/neuronforge_engine/**"
-      - "scripts/prepare_data.py"
-      - "docs/FAI_SOURCE_DYING_EMBER.txt"
-      - "data/shakespeare/**"
   workflow_dispatch:
 
 permissions:

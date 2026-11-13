@@ -34,6 +34,32 @@ Open the [Neuron Forge 250M Google Colab notebook](https://colab.research.google
 
 Colab controls free GPU availability and session duration; neither is guaranteed. The 100,000-step target may require many sessions. Training is not considered complete until a checkpoint report records the final step and validation metrics. The live website does not load this model automatically.
 
+## 40B-class architecture blueprint
+
+Neuron Forge now includes a **40,000,905,216-parameter** architecture definition in [`configs/40b.yaml`](configs/40b.yaml) and [`configs/40b-architecture.json`](configs/40b-architecture.json).
+
+| Setting | Value |
+| --- | ---: |
+| Parameters | 40,000,905,216 |
+| Transformer layers | 49 |
+| Attention heads | 64 |
+| Embedding width | 8,192 |
+| Context length | 2,048 |
+| Vocabulary | 65,536 |
+| Position encoding | RoPE |
+| Normalization | RMSNorm |
+| Feed-forward | SwiGLU |
+
+**Status: architecture added; no 40B weights have been created or trained.** This is not a one-click upgrade to the 250M run. BF16 weights alone are about 74.5 GiB (before KV cache and runtime memory); full training requires a distributed multi-GPU setup, sharded optimizer/checkpoints, a distributed training implementation, and a much larger curated dataset. The existing Colab T4 notebook and current single-process training loop cannot train this model. The 40B config is kept separate so it does not accidentally replace or break the 250M experiment.
+
+Load and count the blueprint without allocating model weights:
+
+```python
+from neuronforge_engine.config import load_config
+cfg = load_config("configs/40b.yaml")
+print(f"{cfg.model.parameter_count():,} parameters")
+```
+
 ## Other experiments
 
 - The previous **1,041,000-parameter** checkpoint remains in the repository as a historical research experiment. It is disabled in live chat.

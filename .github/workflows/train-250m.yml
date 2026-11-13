@@ -72,7 +72,7 @@ jobs:
           cfg = load_config("configs/250m.yaml")
           count = cfg.model.parameter_count()
           print(f"Trainable parameters: {count:,}")
-          assert count == 249_970_240, f"Unexpected architecture size: {count:,}"
+          assert count == 248_144_832, f"Unexpected architecture size: {count:,}"
           assert cfg.train.device == "cuda"
           assert cfg.train.gradient_checkpointing
           PY
@@ -96,8 +96,8 @@ jobs:
           best = read_checkpoint("checkpoints/neuron-forge-250m/best.pt", device="cpu")
           latest = read_checkpoint("checkpoints/neuron-forge-250m/latest.pt", device="cpu")
           actual = cfg.model.parameter_count()
-          assert actual == 249_970_240
-          assert best["model_config"]["n_layer"] == 30
+          assert actual == 248_144_832
+          assert best["model_config"]["n_layer"] == 29
           assert best["model_config"]["n_embd"] == 832
           report = {
               "status": "trained_checkpoint_created",

@@ -1,0 +1,44 @@
+{
+  "model_name": "Neuron Forge 250M",
+  "status": "architecture_configured_training_not_started",
+  "parameters": 249970240,
+  "parameter_target": "approximately 250 million trainable parameters",
+  "model": {
+    "vocab_size": 384,
+    "block_size": 1024,
+    "n_layer": 30,
+    "n_head": 16,
+    "n_embd": 832,
+    "dropout": 0.05
+  },
+  "derived": {
+    "feed_forward_hidden_width": 2224,
+    "attention_head_width": 52,
+    "embedding_weights": 319488,
+    "parameters_per_transformer_block": 8318376,
+    "final_norm_parameters": 832,
+    "tied_token_embedding": true
+  },
+  "architecture": "decoder-only Transformer with RoPE, RMSNorm, SwiGLU, causal scaled dot-product attention, residual connections, and tied token embeddings",
+  "training": {
+    "status": "not_started",
+    "initialization": "random_from_scratch",
+    "device": "dedicated CUDA GPU required",
+    "precision": "bf16 autocast when supported; FP32 optimizer states",
+    "gradient_checkpointing": true,
+    "gradient_accumulation_steps": 32,
+    "corpus_path": "data/general_corpus.txt",
+    "corpus_requirement": "curated, legally usable, diverse general-domain text; not the Shakespeare-only corpus and not FAI material"
+  },
+  "deployment": {
+    "status": "not_deployed",
+    "reason": "The current Vercel Python function is a CPU-oriented local assistant and is not a GPU inference host.",
+    "target": "separate GPU inference service after training and evaluation"
+  },
+  "notes": [
+    "Exact count is derived from the current tied-embedding GPT implementation.",
+    "The 250M architecture is configured; no 250M weights or trained checkpoint exist yet.",
+    "Parameter count alone does not create useful reasoning or instruction following.",
+    "Training requires a large general-purpose training corpus, sustained CUDA compute, instruction tuning, and evaluation."
+  ]
+}

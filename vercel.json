@@ -6,7 +6,7 @@
   "functions": {
     "api/generate.py": {
       "maxDuration": 60,
-      "includeFiles": "{src/neuronforge_engine/web_runtime.py,src/neuronforge_engine/offline_chat.py,src/neuronforge_engine/memory.py,public/shakespeare_index.json,docs/FAI_SOURCE_DYING_EMBER.txt}"
+      "includeFiles": "{src/neuronforge_engine/web_runtime.py,src/neuronforge_engine/offline_chat.py,src/neuronforge_engine/memory.py,src/neuronforge_engine/numpy_inference.py,models/neuron-forge-1m/runtime.npz,models/neuron-forge-1m/runtime.json,public/shakespeare_index.json,docs/FAI_SOURCE_DYING_EMBER.txt}"
     }
   }
 }

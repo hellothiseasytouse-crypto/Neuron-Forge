@@ -12,7 +12,7 @@
   "layers": 2,
   "heads": 4,
   "embedding_width": 200,
-  "precision": "float32\nVocabulary: 384 | Parameter",
+  "precision": "float32",
   "training_device": "CPU",
   "corpus_words": 938388,
   "corpus_files": 43,

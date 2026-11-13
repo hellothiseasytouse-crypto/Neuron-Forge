@@ -120,7 +120,12 @@ class LocalConversationEngine:
             r"same thing|go on|keep going)\b",
             lowered,
         ):
-            context = select_relevant_memories(message, memories + messages[:-1], limit=4)
+            records = memories + messages[:-1]
+            context = select_relevant_memories(message, records, limit=4)
+            if not context:
+                # Continuation phrases often contain no topical keywords. In that
+                # case, use the most recent saved turns rather than losing context.
+                context = records[-4:]
             if context:
                 excerpts = [
                     f"{item['role'].title()}: {item['content'][:300]}"

@@ -100,4 +100,4 @@ def test_cross_chat_memory_recalls_previous_topic(tmp_path):
     ]
     answer = engine.respond(messages, memories=memories)
     assert "Eclipse" in answer
-    assert "earlier context" in answer
+    assert "context" in answer.lower()

@@ -15,7 +15,7 @@
     "feed_forward_hidden_width": 2224,
     "attention_head_width": 52,
     "embedding_weights": 319488,
-    "parameters_per_transformer_block": 8318376,
+    "parameters_per_transformer_block": 8321664,
     "final_norm_parameters": 832,
     "tied_token_embedding": true
   },

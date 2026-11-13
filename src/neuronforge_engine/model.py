@@ -4,6 +4,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint as activation_checkpoint
 
 from .config import ModelConfig
 
@@ -113,6 +114,7 @@ class GPT(nn.Module):
         super().__init__()
         cfg.validate()
         self.config = cfg
+        self.gradient_checkpointing = False
         self.token_embedding = nn.Embedding(cfg.vocab_size, cfg.n_embd)
         self.drop = nn.Dropout(cfg.dropout)
         self.blocks = nn.ModuleList([Block(cfg) for _ in range(cfg.n_layer)])
@@ -143,7 +145,10 @@ class GPT(nn.Module):
             raise ValueError(f"Sequence length {length} exceeds block_size {self.config.block_size}")
         x = self.drop(self.token_embedding(idx))
         for block in self.blocks:
-            x = block(x)
+            if self.training and self.gradient_checkpointing:
+                x = activation_checkpoint(block, x, use_reentrant=False)
+            else:
+                x = block(x)
         logits = self.lm_head(self.final_norm(x))
         loss = None
         if targets is not None:

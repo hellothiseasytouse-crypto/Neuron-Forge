@@ -82,8 +82,8 @@ def train(config: Config, resume: bool = False) -> Path:
     saved = None
     if resume:
         saved = read_checkpoint(checkpoint_path, device="cpu")
-        if saved.get("format_version") != 2:
-            raise ValueError("This checkpoint predates the current Transformer architecture. Start a new training run instead of resuming it.")
+        if saved.get("format_version") not in {2, 3}:
+            raise ValueError("This checkpoint format cannot be resumed. Start a new training run.")
         tokenizer = ByteBPETokenizer.from_state_dict(saved["tokenizer"])
         print(f"Resuming from step {saved.get('step', 0)}")
     else:
@@ -150,6 +150,13 @@ def train(config: Config, resume: bool = False) -> Path:
                 best_val = metrics["val"]
                 best_path = checkpoint_path.with_name("best" + checkpoint_path.suffix)
                 save_checkpoint(best_path, model, tokenizer, config.to_dict(), completed_step, best_val)
+
+            # Keep a resumable checkpoint with optimizer state at every evaluation.
+            # Cloud notebook runtimes can end without warning; the next session
+            # should continue from the last fully saved optimizer update.
+            save_checkpoint(checkpoint_path, model, tokenizer, config.to_dict(),
+                            completed_step, best_val, optimizer=optimizer)
+            print(f"Saved resumable checkpoint at step {completed_step}: {checkpoint_path}")
 
     save_checkpoint(checkpoint_path, model, tokenizer, config.to_dict(), config.train.max_steps,
                     best_val, optimizer=optimizer)

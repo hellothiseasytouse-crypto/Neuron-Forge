@@ -17,4 +17,4 @@
 - [ ] Add instruction fine-tuning and preference evaluation as separate, documented stages
 - [ ] Add security review before any public deployment
 
-The checked items describe repository implementation, not a claim that a capable foundation model has already been trained.
+The checked items describe repository implementation, not a claim that a capable foundation model has already been trained. The hosted website still uses the limited offline conversation runtime; the trainable Transformer has no bundled trained checkpoint. Instruction tuning, preference evaluation, large-corpus streaming, and distributed training remain future work.

@@ -62,9 +62,12 @@ jobs:
           fi
 
       - name: Verify data and architecture
+        env:
+          MAX_STEPS: ${{ inputs.max_steps }}
         run: |
           python - <<'PY'
           import json
+          import os
           from pathlib import Path
           from neuronforge_engine.config import load_config
           cfg = load_config("configs/40b.yaml")
@@ -78,15 +81,14 @@ jobs:
               "validation_tokens": manifest["validation_tokens"],
               "sources": [item["dataset_id"] for item in manifest["sources"]],
           }, indent=2))
-          if manifest["train_tokens"] < 10_000_000:
-              raise SystemExit("Refusing to train: fewer than 10M training tokens were prepared.")
+          minimum = cfg.train.minimum_data_tokens
+          if manifest["train_tokens"] < minimum and not os.environ.get("MAX_STEPS"):
+              raise SystemExit(f"Refusing full 40B training: only {manifest['train_tokens']:,} tokens prepared; require at least {minimum:,}. Enable a much larger, reviewed dataset.")
           PY
-
       - name: Run distributed pretraining
         shell: bash
         env:
           MAX_STEPS: ${{ inputs.max_steps }}
-          SMOKE_TEST: ${{ inputs.max_steps }}
         run: |
           set -o pipefail
           GPU_COUNT=$(python -c "import torch; print(torch.cuda.device_count())")

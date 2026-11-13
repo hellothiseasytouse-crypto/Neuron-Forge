@@ -24,7 +24,7 @@ SENSITIVE_RE = re.compile(
 )
 
 
-def normalize_memory_entries(raw: Any, max_entries: int = 40, max_chars: int = 18000) -> list[dict[str, str]]:
+def normalize_memory_entries(raw: Any, max_entries: int = 24, max_chars: int = 12000) -> list[dict[str, str]]:
     """Accept only bounded user/assistant text records; discard obvious credentials."""
     if not isinstance(raw, list):
         return []

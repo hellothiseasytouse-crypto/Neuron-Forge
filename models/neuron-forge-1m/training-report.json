@@ -1,0 +1,29 @@
+{
+  "status": "trained_and_verified",
+  "training_method": "fresh random initialization; no pretrained weights and no hosted AI API",
+  "architecture": "decoder-only Transformer with RoPE, RMSNorm, SwiGLU and causal scaled dot-product attention",
+  "parameters": 1041000,
+  "initialization": "random",
+  "training_steps": 2500,
+  "best_checkpoint_step": 2000,
+  "best_validation_loss": 3.0057688653469086,
+  "vocabulary_size": 384,
+  "context_length": 96,
+  "layers": 2,
+  "heads": 4,
+  "embedding_width": 200,
+  "precision": "float32\nVocabulary: 384 | Parameter",
+  "training_device": "CPU",
+  "corpus_words": 938388,
+  "corpus_files": 43,
+  "checkpoints": [
+    "best.pt",
+    "latest.pt"
+  ],
+  "limitations": [
+    "This is an experimental base language model, not a ChatGPT-level general assistant.",
+    "The training corpus remains Shakespeare-heavy plus the short Dying Ember source document.",
+    "The Dying Ember document is not the missing FAI conversation archive.",
+    "The checkpoint is not automatically loaded by the live website chat runtime."
+  ]
+}

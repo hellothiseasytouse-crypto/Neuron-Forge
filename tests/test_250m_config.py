@@ -9,8 +9,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_250m_architecture_has_exact_target_parameter_count():
     config = load_config(ROOT / "configs" / "250m.yaml")
-    assert config.model.parameter_count() == 249_970_240
-    assert config.model.n_layer == 30
+    assert config.model.parameter_count() == 248_144_832
+    assert config.model.n_layer == 29
     assert config.model.n_head == 16
     assert config.model.n_embd == 832
     assert config.model.block_size == 1024

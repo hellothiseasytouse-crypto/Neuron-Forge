@@ -9,6 +9,8 @@ The model was trained from random initialization on the hosted CPU runner. No pr
 - [Model folder](https://github.com/hellothiseasytouse-crypto/Neuron-Forge/tree/main/models/neuron-forge-1m)
 - [Training report](../models/neuron-forge-1m/training-report.json)
 - [Generated sample](../models/neuron-forge-1m/sample.txt)
+- [Exported NumPy runtime weights](../models/neuron-forge-1m/runtime.npz)
+- [Live website](https://neuron-forge-cyber-0ab0.vercel.app)
 
 ## Architecture and metrics
 
@@ -49,4 +51,4 @@ The Dying Ember source document is not the missing FAI conversation archive. The
 
 This is a small experimental base language model, not a ChatGPT-level assistant. Its generated sample is still inconsistent and incoherent. A larger parameter count does not automatically produce better reasoning or broad knowledge.
 
-The hosted Neuron Forge website still uses its offline conversation prototype. The trained checkpoint has not been connected to that website's inference endpoint. Connecting it requires a separate inference-runtime integration and deployment, plus further evaluation and safety testing. A FAI-focused reconstruction also requires the actual permitted FAI conversation archive; that data has not been provided here.
+The live Neuron Forge website now loads the exported NumPy runtime and uses the checkpoint for experimental open-ended generation through `/api/generate`. Deterministic handlers continue to protect saved-chat recall, arithmetic, Shakespeare lookup, and the Dying Ember evidence boundary. This integration avoids bundling PyTorch into the Vercel function. The deployed model is not instruction-tuned, so its generated answers can be unreliable and incoherent; it should be treated as an experimental text generator, not a dependable general-purpose assistant. A FAI-focused reconstruction also requires the actual permitted FAI conversation archive; that data has not been provided here.

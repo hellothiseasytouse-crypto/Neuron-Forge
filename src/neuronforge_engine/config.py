@@ -47,7 +47,7 @@ class TokenizerConfig:
 
 @dataclass
 class TrainConfig:
-    data_path: str = "data/raw/input.txt"
+    data_path: str = "data/processed/shakespeare_corpus.txt"
     batch_size: int = 16
     max_steps: int = 5_000
     learning_rate: float = 3e-4

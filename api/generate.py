@@ -99,16 +99,18 @@ class handler(BaseHTTPRequestHandler):
             details = corpus.describe()
             details.update({
                 "assistant_ready": True,
-                "assistant_model": "Neuron Forge · local assistant prototype",
+                "assistant_model": "Neuron Forge · local assistant with 250M research architecture configured",
                 "ai_mode": "offline-local",
                 "external_ai_api": False,
                 "conversation_memory": "browser-local; selected excerpts are sent only with chat requests",
-                "neural_model": {
-                    "loaded": False,
-                    "name": "Neuron Forge 1M research checkpoint",
-                    "parameters": 1041000,
+                "model_target": {
+                    "name": "Neuron Forge 250M",
+                    "parameters": 249970240,
+                    "status": "architecture-configured; training not started",
+                    "trained": False,
                     "chat_enabled": False,
-                    "role": "kept out of live chat until it passes instruction-following and response-quality checks",
+                    "training_device": "dedicated CUDA GPU required",
+                    "corpus": "general-domain corpus not yet provided",
                 },
             })
             send_json(self, 200, {"ok": True, **details})

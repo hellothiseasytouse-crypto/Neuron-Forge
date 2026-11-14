@@ -65,7 +65,7 @@ python scripts/prepare_4b_sft.py --input data/reviewed-conversations.jsonl --tok
 torchrun --standalone --nnodes=1 --nproc_per_node=8 scripts/instruction_tune_4b_fsdp.py --config configs/4b-sft.yaml --data-dir data/4b-sft --pretrained-checkpoint checkpoints/neuron-forge-4b --checkpoint-dir checkpoints/neuron-forge-4b-sft
 \`\`\`
 
-The SFT data builder removes exact duplicate conversations, creates a deterministic held-out split, and masks user/system tokens so only assistant response tokens contribute to supervised loss. It does not itself certify the source data; the owner must review and document the source license, provenance, privacy and quality.
+The SFT data builder removes exact duplicate conversations, creates a deterministic held-out split, and masks user/system tokens so only assistant response tokens contribute to supervised loss. The SFT trainer imports only the pretrained model weights and initializes a fresh AdamW optimizer, so pretraining optimizer moments do not leak into the instruction-tuning stage. It does not itself certify the source data; the owner must review and document the source license, provenance, privacy and quality.
 
 Both training stages append training/validation measurements to \`metrics.jsonl\` and save resumable distributed checkpoints. The instruction-tuning workflow is manual and also requires the same self-hosted multi-GPU runner plus persistent access to the pretrained checkpoint and prepared SFT shards.
 

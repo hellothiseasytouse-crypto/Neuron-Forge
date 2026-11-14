@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 import torch.distributed.checkpoint as dcp
-from torch.distributed.checkpoint.state_dict import get_state_dict, set_state_dict
+from torch.distributed.checkpoint.state_dict import get_model_state_dict, set_model_state_dict, get_state_dict, set_state_dict
 from torch.distributed.checkpoint.stateful import Stateful
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP, MixedPrecision, ShardingStrategy
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
@@ -26,6 +26,18 @@ class TrainingState(Stateful):
         m,o=get_state_dict(self.model,self.optimizer); return {"model":m,"optimizer":o}
     def load_state_dict(self,state):
         set_state_dict(self.model,self.optimizer,model_state_dict=state["model"],optim_state_dict=state["optimizer"])
+
+class ModelOnlyState(Stateful):
+    """Load pretrained model weights without importing pretraining AdamW moments."""
+    def __init__(self, model: nn.Module):
+        self.model = model
+
+    def state_dict(self):
+        return {"model": get_model_state_dict(self.model)}
+
+    def load_state_dict(self, state):
+        set_model_state_dict(self.model, model_state_dict=state["model"])
+
 
 def init_meta(module,device):
     module.to_empty(device=device,recurse=False)
@@ -121,7 +133,7 @@ def main():
         tx,ty=shards(a.data_dir,"train",cfg.model.block_size); vx,vy=shards(a.data_dir,"validation",cfg.model.block_size)
         model=build_model(cfg,device)
         optimizer=torch.optim.AdamW(model.parameters(),lr=cfg.train.learning_rate,betas=(0.9,0.95),weight_decay=cfg.train.weight_decay)
-        dcp.load({"training":TrainingState(model,optimizer)},checkpoint_id=str(base_folder))
+        dcp.load({"training":ModelOnlyState(model)},checkpoint_id=str(base_folder))
         a.checkpoint_dir.mkdir(parents=True,exist_ok=True)
         start,best=(0,float("inf")) if a.no_resume else restore(model,optimizer,a.checkpoint_dir)
         steps=a.max_steps if a.max_steps>0 else cfg.train.max_steps
@@ -141,9 +153,9 @@ def main():
             model.clip_grad_norm_(cfg.train.grad_clip); optimizer.step(); done=step+1
             if done==1 or done%10==0:
                 metric=running.float(); dist.all_reduce(metric); metric/=world
-                if rank==0:
-                print(f"SFT step {done}/{steps} | assistant_loss {metric.item():.4f} | lr {lr:.3e}",flush=True)
-                append_metric(a.checkpoint_dir,{"stage":"instruction_tuning","step":done,"assistant_train_loss":float(metric.item()),"learning_rate":lr},rank)
+                if rank == 0:
+                    print(f"SFT step {done}/{steps} | assistant_loss {metric.item():.4f} | lr {lr:.3e}",flush=True)
+                    append_metric(a.checkpoint_dir,{"stage":"instruction_tuning","step":done,"assistant_train_loss":float(metric.item()),"learning_rate":lr},rank)
             if done%cfg.train.eval_interval==0 or done==steps:
                 val=evaluate(model,vx,vy,cfg,rng,device,world); best=min(best,val)
                 if rank==0:
